@@ -1,4 +1,3 @@
-source E:/Data/code/FSharp.Qualia/bin
 source https://nuget.org/api/v2
 
 nuget FSharp.Formatting
@@ -8,6 +7,7 @@ nuget FAKE
 nuget SourceLink.Fake
 nuget AWSSDK
 nuget Newtonsoft.Json
+nuget MahApps.Metro
 
 nuget FSharp.Qualia
 nuget FSharp.Qualia.WPF
