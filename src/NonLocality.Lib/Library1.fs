@@ -90,7 +90,10 @@ module SyncPoint =
                                                      trigger = trigger }
     let listBuckets (s3:S3.IAmazonS3) = s3.ListBuckets().Buckets
     let listLocalFiles sp =
-        let d = new DirectoryInfo(sp.path)
+        let d =
+            if not <| Directory.Exists sp.path
+            then Directory.CreateDirectory sp.path
+            else new DirectoryInfo(sp.path)
         d.GetFiles() |> Array.ofSeq
     let listRemoteFiles (s3:S3.IAmazonS3) sp = 
         async {

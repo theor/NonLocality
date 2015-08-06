@@ -10,6 +10,15 @@ NUGET
     FSharp.Formatting (2.10.0)
       FSharp.Compiler.Service (>= 0.0.87)
       FSharpVSPowerTools.Core (1.8.0)
+    FSharp.Qualia (0.1.1)
+      FSharp.Core (>= 4.0.0)
+      Rx-Main
+    FSharp.Qualia.WPF (0.1.1)
+      FSharp.Core (>= 4.0.0)
+      FSharp.Qualia (>= 0.1.1)
+      FsXaml.Wpf
+      Rx-Main
+      gong-wpf-dragdrop
     FSharpVSPowerTools.Core (1.8.0)
       FSharp.Compiler.Service (>= 0.0.87)
     FsXaml.Wpf (0.9.9)
@@ -25,7 +34,7 @@ NUGET
     Newtonsoft.Json (7.0.1)
     NUnit (2.6.4)
     NUnit.Runners (2.6.4)
-    Octokit (0.14.0)
+    Octokit (0.14.0) - framework: >= net35 < net40
       Microsoft.Net.Http
     Rx-Core (2.2.5)
       Rx-Interfaces (>= 2.2.5)
@@ -43,17 +52,6 @@ NUGET
       Rx-Interfaces (>= 2.2.5)
     SourceLink.Fake (1.0.0)
     WPFToolkit (3.5.50211.1) - framework: >= net35 < net40
-  remote: E:/Data/code/FSharp.Qualia/bin
-  specs:
-    FSharp.Qualia (0.1.2)
-      FSharp.Core (>= 4.0.0)
-      Rx-Main
-    FSharp.Qualia.WPF (0.1.2)
-      FSharp.Core (>= 4.0.0)
-      FSharp.Qualia (>= 0.1.2)
-      FsXaml.Wpf
-      Rx-Main
-      gong-wpf-dragdrop
 GITHUB
   remote: fsharp/FAKE
   specs:
