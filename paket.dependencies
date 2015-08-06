@@ -1,3 +1,4 @@
+source E:/Data/code/FSharp.Qualia/bin
 source https://nuget.org/api/v2
 
 nuget FSharp.Formatting
@@ -5,7 +6,9 @@ nuget NUnit
 nuget NUnit.Runners
 nuget FAKE
 nuget SourceLink.Fake
+nuget AWSSDK
+nuget Newtonsoft.Json
+
 nuget FSharp.Qualia
 nuget FSharp.Qualia.WPF
-nuget AWSSDK
 github fsharp/FAKE modules/Octokit/Octokit.fsx

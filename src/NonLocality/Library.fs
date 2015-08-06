@@ -6,38 +6,16 @@ open System.Collections.ObjectModel
 open System.Windows.Controls
 open FSharp.Qualia.WPF
 open System
-
-(**
-WPF Collections tutorial
-========================
-
-The resulting app will contain a listbox, an 'Add Item' button, and label displaying the current selection and will delete the selected item when pressing the Delete key.
-
-First, a small helper used for the ListBox.SelectedItem:
-
-*)
+open NonLocality.Lib
+open Amazon.S3
 
 let cast<'a> (x:obj) : 'a option =
     match x with
     | :? 'a as y -> Some y
     | _ -> None
 
-(**
-The app event type - adding, removing and selecting an item
-*)
+type Events = Fetch | Remove | SelectionChanged of ControlledFile.T option
 
-type Events = Add | Remove | SelectionChanged of ItemModel option
-(**
-ItemModel itself is defined here, containing a string property. As it won't change, this is a plain property, not a ReactiveProperty<string>.
-
-We also override ToString() to avoid defining a template for the sake of the tutorial.
-*)
-and ItemModel(s) =
-    member val Text = s
-    override x.ToString() = x.Text
-(**
-The concrete WPF window type - this should be replaced by a .xaml loaded by FsXaml in the real world.
-*)
 type ListViewWindow() as x =
     inherit Window()
     let label = Label()
@@ -53,29 +31,21 @@ type ListViewWindow() as x =
     member val Button = button
     member val List = list
 
-(**
-Item Qualia view: no template here, just a Label. That's why we overrode ToString().
-In SetBindings, we just set once the label content - this is equivalent to a binding mode Once.
-*)
 type ItemView(m) =
-    inherit View<Events, Label, ItemModel>(Label(), m)
+    inherit View<Events, Label, ControlledFile.T>(Label(), m)
      override x.EventStreams = []
-     override x.SetBindings m = x.Root.Content <- m.Text
-(**
-List model : the items collection and a reactive property containing the selected item. As it can be null, this is an ItemModel option.
-*)
+     override x.SetBindings m = x.Root.Content <- m.key
+
 type ListModel() =
-    member val Items = new ObservableCollection<ItemModel>()
-    member val SelectedItem = new ReactiveProperty<ItemModel option>(None)
-(**
-The view inherits DerivedCollectionSourceView, but this is a convenience class providing one helper method at the moment, *linkCollection*. You could just do the plumbing by hand.
-*)   
+    member val Items = new ObservableCollection<ControlledFile.T>()
+    member val SelectedItem = new ReactiveProperty<ControlledFile.T option>(None)
+
 type ListAView(elt, m) =
     inherit DerivedCollectionSourceView<Events, ListViewWindow, ListModel>(elt, m)
 
     override x.EventStreams = [
         (** Add an item when clicking the Add button *)
-        elt.Button.Click --> Add
+        elt.Button.Click --> Fetch
         (** This one just fetch the selected item, tries to cast it to ItemView, then select the view's Model as an option. *)
         elt.List.SelectionChanged |> Observable.map (fun _ -> SelectionChanged((cast<ItemView> elt.List.SelectedItem |> Option.map(fun v -> v.Model))))
         (** Send a remove event, only when <Del> is pressed *)
@@ -89,23 +59,40 @@ type ListAView(elt, m) =
 (**
 Typical dispatcher - 
 *)
-type ListController() =
+type ListController(s3:IAmazonS3, sp:SyncPoint.T) =
+    let fetch (m:ListModel) =
+        async {
+            do m.Items.Clear()
+            let! files = sp |> SyncPoint.fetch s3
+            do files |> Array.iter (m.Items.Add)
+//            return files// |> Array.iter (m.Items.Add)
+        }
+//        let files = Async.RunSynchronously f
+//        m.Items.Clear()
+//        files |> Array.iter (m.Items.Add)
     interface IDispatcher<Events,ListModel> with
         member this.InitModel m = ()
         member this.Dispatcher = 
             function
-            | Add -> Sync (fun m -> m.Items.Add (ItemModel(sprintf "#%i" m.Items.Count)))
+            | Fetch -> Async fetch
             | Remove -> Sync (fun m -> m.SelectedItem.Value |> Option.iter (m.Items.Remove >> ignore))
             | SelectionChanged item -> printfn "%A" item; Sync (fun m -> m.SelectedItem.Value <- item)
 
 [<EntryPoint>]
 [<STAThread>]
 let main args =
-    let app = Application()
-    let lm = ListModel()
-    let v = ListAView(new ListViewWindow(),lm)
-    let c = ListController()
-    let loop = EventLoop(v, c)
-    use l = loop.Start()
-    app.Run(v.Root)
+    let p = Profiles.getProfile()
+    if Option.isNone p then 1
+    else
+        let pp = p.Value
+        let s3 = Profiles.createClient pp
+//        let buckets = SyncPoint.listBuckets s3
+        let sp = SyncPoint.create "sync-bucket-test" "E:\\tmp"  [||] SyncTrigger.Manual
+        let app = Application()
+        let lm = ListModel()
+        let v = ListAView(new ListViewWindow(),lm)
+        let c = ListController(s3, sp)
+        let loop = EventLoop(v, c)
+        use l = loop.Start()
+        app.Run(v.Root)
 
