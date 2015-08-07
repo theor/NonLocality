@@ -4,10 +4,10 @@ nuget FSharp.Formatting
 nuget NUnit 
 nuget NUnit.Runners
 nuget FAKE
+nuget Rx-Wpf
 nuget SourceLink.Fake
 nuget AWSSDK
 nuget Newtonsoft.Json
-nuget MahApps.Metro
 
 nuget FSharp.Qualia
 nuget FSharp.Qualia.WPF

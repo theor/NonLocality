@@ -78,11 +78,18 @@ type Rule = { pattern : Regex
 type SyncTrigger = Manual | Periodic of TimeSpan
 
 module SyncPoint =
+    open Newtonsoft.Json
 
     type T = { bucketName : string
                path : string
                rules : Rule[]
                trigger : SyncTrigger }
+
+    let save path sp = 
+        let json = JsonConvert.SerializeObject(sp, Formatting.Indented)
+        do System.IO.File.WriteAllText(path, json)
+
+    let load path = JsonConvert.DeserializeObject<T>(File.ReadAllText(path))
 
     let create bucketName path rules trigger : T = { bucketName = bucketName
                                                      path = path

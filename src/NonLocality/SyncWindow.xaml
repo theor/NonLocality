@@ -7,6 +7,6 @@
     <StackPanel>
         <Label x:Name="label"/>
         <Button x:Name="button"/>
-        <ListBox x:Name="list"/>
+        <ListView x:Name="list"/>
     </StackPanel>
 </Controls:MetroWindow>

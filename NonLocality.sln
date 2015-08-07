@@ -37,9 +37,9 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NonLocality.Tests", "tests\
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NonLocality.Lib", "src\NonLocality.Lib\NonLocality.Lib.fsproj", "{CAF514CB-7034-4D04-9565-1A015DE924F9}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Qualia", "..\FSharp.MVC\src\FSharp.Qualia\FSharp.Qualia.fsproj", "{0EA768EC-D373-4536-BDF8-8C8FE8073670}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Qualia", "..\FSharp.Qualia\src\FSharp.Qualia\FSharp.Qualia.fsproj", "{0EA768EC-D373-4536-BDF8-8C8FE8073670}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Qualia.WPF", "..\FSharp.MVC\src\FSharp.Qualia.WPF\FSharp.Qualia.WPF.fsproj", "{F76CBDDF-B8DE-4BC2-84C4-55C56E356CD9}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Qualia.WPF", "..\FSharp.Qualia\src\FSharp.Qualia.WPF\FSharp.Qualia.WPF.fsproj", "{F76CBDDF-B8DE-4BC2-84C4-55C56E356CD9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

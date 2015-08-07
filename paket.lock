@@ -51,6 +51,10 @@ NUGET
     Rx-PlatformServices (2.2.5)
       Rx-Core (>= 2.2.5)
       Rx-Interfaces (>= 2.2.5)
+    Rx-WPF (2.2.5)
+      Rx-Xaml (>= 2.2.5)
+    Rx-Xaml (2.2.5)
+      Rx-Main (>= 2.2.5)
     SourceLink.Fake (1.0.0)
     WPFToolkit (3.5.50211.1) - framework: >= net35 < net40
 GITHUB

@@ -1,6 +1,7 @@
 module NonLocality
 
 open System.Collections.ObjectModel
+open System.Reactive.Linq
 open System.Windows
 open System.Windows.Controls
 open System
@@ -10,6 +11,7 @@ open FsXaml
 open FSharp.Qualia
 open FSharp.Qualia.WPF
 open NonLocality.Lib
+open System.Threading
 
 let cast<'a> (x:obj) : 'a option =
     match x with
@@ -18,48 +20,41 @@ let cast<'a> (x:obj) : 'a option =
 
 type Events = Fetch | Remove | SelectionChanged of ControlledFile.T option
 
-type ListViewWindow = XAML<"SyncWindow.xaml", true>
+type SyncWindow = XAML<"SyncWindow.xaml", true>
+type SyncItem = XAML<"SyncItem.xaml", true>
 
-type ItemView(m) =
-    inherit View<Events, Label, ControlledFile.T>(Label(), m)
+type SyncItemView(m, elt:SyncItem) =
+    inherit View<Events, FrameworkElement, ControlledFile.T>(elt.Root, m)
      override x.EventStreams = []
-     override x.SetBindings m = x.Root.Content <- m.key
+     override x.SetBindings m =
+        elt.name.Content <- m.key
+        elt.status.Content <- sprintf "%A" m.status
 
-type ListModel() =
+type SyncModel() =
     member val Items = new ObservableCollection<ControlledFile.T>()
     member val SelectedItem = new ReactiveProperty<ControlledFile.T option>(None)
 
-type ListAView(elt:ListViewWindow, m) =
-    inherit DerivedCollectionSourceView<Events, Window, ListModel>(elt.Root, m)
+type SyncView(elt:SyncWindow, m) =
+    inherit DerivedCollectionSourceView<Events, Window, SyncModel>(elt.Root, m)
 
     override x.EventStreams = [
-        (** Add an item when clicking the Add button *)
         elt.button.Click --> Fetch
-        (** This one just fetch the selected item, tries to cast it to ItemView, then select the view's Model as an option. *)
-        elt.list.SelectionChanged |> Observable.map (fun _ -> SelectionChanged((cast<ItemView> elt.list.SelectedItem |> Option.map(fun v -> v.Model))))
-        (** Send a remove event, only when <Del> is pressed *)
-        elt.list.KeyDown |> Observable.filter (fun (e:Input.KeyEventArgs) -> e.Key = Input.Key.Delete) |> Observable.mapTo Remove ]
+        elt.list.SelectionChanged |> Observable.map (fun _ -> SelectionChanged((cast<SyncItemView> elt.list.SelectedItem |> Option.map(fun v -> v.Model))))
+        elt.list.KeyDown |> Observable.filter (fun (e:Input.KeyEventArgs) -> e.Key = Input.Key.Delete) |> Observable.mapTo Remove
+        Observable.Return Fetch ]
     override x.SetBindings m =
-        (** That's all the collection plumbing: which WPF list, how to create a view for each item model, and which model collection to monitor.
-            We could use the returned CollectionView to do some filtering/grouping/sorting/... *)
-        let collview = x.linkCollection elt.list (fun i -> ItemView(i)) m.Items
+        let collview = x.linkCollection elt.list (fun i -> SyncItemView(i, SyncItem())) m.Items
         m.SelectedItem |> Observable.add (fun i -> elt.label.Content <- sprintf "Press <DEL> to delete the selection item. Current Selection: %A" i)
         ()
-(**
-Typical dispatcher - 
-*)
-type ListController(s3:IAmazonS3, sp:SyncPoint.T) =
-    let fetch (m:ListModel) =
+
+type SyncController(s3:IAmazonS3, sp:SyncPoint.T) =
+    let fetch (m:SyncModel) =
         async {
             do m.Items.Clear()
             let! files = sp |> SyncPoint.fetch s3
             do files |> Array.iter (m.Items.Add)
-//            return files// |> Array.iter (m.Items.Add)
         }
-//        let files = Async.RunSynchronously f
-//        m.Items.Clear()
-//        files |> Array.iter (m.Items.Add)
-    interface IDispatcher<Events,ListModel> with
+    interface IDispatcher<Events,SyncModel> with
         member this.InitModel m = ()
         member this.Dispatcher = 
             function
@@ -78,12 +73,15 @@ let main args =
         let pp = p.Value
         let s3 = Profiles.createClient pp
 //        let buckets = SyncPoint.listBuckets s3
-        let sp = SyncPoint.create "sync-bucket-test" "F:\\tmp\\nonlocality"  [||] SyncTrigger.Manual
+        let sp = SyncPoint.load "..\\..\\sp.json"
+//        let sp = SyncPoint.create "sync-bucket-test" "F:\\tmp\\nonlocality"  [||] SyncTrigger.Manual
+//        let json = JsonConvert.SerializeObject(sp, Formatting.Indented)
+//        do System.IO.File.WriteAllText(path, json)
         let app = App()
-        let lm = ListModel()
-        let v = ListAView(new ListViewWindow(),lm)
-        let c = ListController(s3, sp)
+        let lm = SyncModel()
+        let v = SyncView(new SyncWindow(),lm)
+        let c = SyncController(s3, sp)
         let loop = EventLoop(v, c)
-        use l = loop.Start()
-        app.Root.Run(v.Root)
+//        use l = loop.Start()
+        WpfApp.runApp loop v app.Root
 
