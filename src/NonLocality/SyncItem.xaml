@@ -5,9 +5,15 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         
         <Label x:Name="name"/>
         <Label x:Name="status" Grid.Column="1"/>
+        <StackPanel Grid.Column="2" Orientation="Horizontal">
+            <RadioButton x:Name="actionSkip" Content="Skip" IsChecked="True"/>
+            <RadioButton x:Name="actionSend" Content="Send" />
+            <RadioButton x:Name="actionGet" Content="Get" />
+        </StackPanel>
     </Grid>
 </UserControl>

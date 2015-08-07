@@ -18,21 +18,29 @@ let cast<'a> (x:obj) : 'a option =
     | :? 'a as y -> Some y
     | _ -> None
 
-type Events = Fetch | Remove | SelectionChanged of ControlledFile.T option
+type Events = Fetch | Remove | SelectionChanged of FileSyncPreview option
 
 type SyncWindow = XAML<"SyncWindow.xaml", true>
 type SyncItem = XAML<"SyncItem.xaml", true>
 
 type SyncItemView(m, elt:SyncItem) =
-    inherit View<Events, FrameworkElement, ControlledFile.T>(elt.Root, m)
-     override x.EventStreams = []
-     override x.SetBindings m =
-        elt.name.Content <- m.key
-        elt.status.Content <- sprintf "%A" m.status
+    inherit View<Events, FrameworkElement, FileSyncPreview>(elt.Root, m)
+    let {file=file;action=action} = m
+    override x.EventStreams = []
+    override x.SetBindings m =
+        elt.name.Content <- file.key
+        elt.status.Content <- sprintf "%A" file.status
+        match action with
+        | NoAction -> elt.actionSkip.IsChecked <- Nullable true
+        | GetRemote -> elt.actionGet.IsChecked <- Nullable true
+        | SendLocal -> elt.actionSend.IsChecked <- Nullable true
+        | ResolveConflict -> failwith "Not implemented yet"
+
+//        elt.action.Content <- sprintf "%A" action
 
 type SyncModel() =
-    member val Items = new ObservableCollection<ControlledFile.T>()
-    member val SelectedItem = new ReactiveProperty<ControlledFile.T option>(None)
+    member val Items = new ObservableCollection<FileSyncPreview>()
+    member val SelectedItem = new ReactiveProperty<FileSyncPreview option>(None)
 
 type SyncView(elt:SyncWindow, m) =
     inherit DerivedCollectionSourceView<Events, Window, SyncModel>(elt.Root, m)
@@ -51,8 +59,9 @@ type SyncController(s3:IAmazonS3, sp:SyncPoint.T) =
     let fetch (m:SyncModel) =
         async {
             do m.Items.Clear()
-            let! files = sp |> SyncPoint.fetch s3
-            do files |> Array.iter (m.Items.Add)
+            let! (_,_,files) = sp |> SyncPoint.fetch s3
+            let syncPreview = files |> SyncPoint.syncPreview s3 sp
+            do syncPreview |> Array.iter (m.Items.Add)
         }
     interface IDispatcher<Events,SyncModel> with
         member this.InitModel m = ()

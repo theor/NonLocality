@@ -4,9 +4,24 @@
                       Title="Sync Preview" 
                       Height="350" 
                       Width="525">
-    <StackPanel>
-        <Label x:Name="label"/>
-        <Button x:Name="button"/>
-        <ListView x:Name="list"/>
-    </StackPanel>
+     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <ListView Grid.Row="0" x:Name="list"/>
+        <Label Grid.Row="1" x:Name="label"/>
+        <Button Grid.Row="2" x:Name="button"/>
+        <Grid Grid.Row="3" Margin="10">
+          <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <Button x:Name="buttonSync" Grid.Column="1" Style="{StaticResource AccentedSquareButtonStyle}">Sync</Button>
+          <Button x:Name="buttonCancel" Grid.Column="2" Style="{StaticResource SquareButtonStyle}">Cancel</Button>
+        </Grid>
+    </Grid>
 </Controls:MetroWindow>

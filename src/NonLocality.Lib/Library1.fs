@@ -77,6 +77,10 @@ type Rule = { pattern : Regex
 
 type SyncTrigger = Manual | Periodic of TimeSpan
 
+type FileSyncAction = NoAction | GetRemote | SendLocal | ResolveConflict
+type FileSyncPreview = { file : ControlledFile.T
+                         action : FileSyncAction }
+
 module SyncPoint =
     open Newtonsoft.Json
 
@@ -84,7 +88,7 @@ module SyncPoint =
                path : string
                rules : Rule[]
                trigger : SyncTrigger }
-
+    type FetchResult = T * DateTime * ControlledFile.T[]
     let save path sp = 
         let json = JsonConvert.SerializeObject(sp, Formatting.Indented)
         do System.IO.File.WriteAllText(path, json)
@@ -110,13 +114,17 @@ module SyncPoint =
     let fetch (s3:S3.IAmazonS3) sp =
         let fileKey (f:ControlledFile.T) = (f.key,f)
         async {
+            let time = DateTime.Now
             let! rf = s3.ListObjectsAsync (S3.Model.ListObjectsRequest(BucketName = sp.bucketName)) |> Async.AwaitTask
             let remotes = rf.S3Objects |> Seq.map (ControlledFile.fromS3Object >> fileKey) |> Map.ofSeq
             let locals = listLocalFiles sp |> Array.map ControlledFile.fromLocal |> Array.map fileKey |> Map.ofSeq
-            return Utils.merge remotes locals (fun k (r,l) -> ControlledFile.fromLocalRemote l r)
-                   |> Map.toSeq
-                   |> Seq.map snd
-                   |> Seq.toArray
+            let files = Utils.merge remotes locals (fun k (r,l) -> ControlledFile.fromLocalRemote l r)
+                        |> Map.toSeq
+                        |> Seq.map snd
+                        |> Seq.toArray
+            return (sp,time,files)
 //            return rmap
         }
+    let syncPreview (s3:S3.IAmazonS3) sp (files:ControlledFile.T[]) =
+        files |> Array.map (fun f -> { file = f; action = NoAction })
         
