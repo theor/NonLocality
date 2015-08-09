@@ -31,14 +31,19 @@ module Profiles =
     let listProfiles() = ProfileManager.ListProfileNames()
     let createClient (p:Amazon.Runtime.AWSCredentials) =
         AWSClientFactory.CreateAmazonS3Client(p, Amazon.RegionEndpoint.USEast1)
-    
+
+type Status = Identical | Local | Remote    
+
+[<StructuredFormatDisplay("{key}: {status}")>]
+type ControlledFile =
+    { key:string
+      etag:string
+      status:Status
+      localModifiedDate:DateTime option
+      remoteModifiedDate:DateTime option }
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module ControlledFile =
-    type Status = Identical | Local | Remote
-    type T = { key:string
-               etag:string
-               status:Status
-               localModifiedDate:DateTime option
-               remoteModifiedDate:DateTime option }
     let fromS3Object (o:S3Object) =
         { key = o.Key
           etag = o.ETag
@@ -47,58 +52,91 @@ module ControlledFile =
           remoteModifiedDate = Some o.LastModified }
 
     let fromLocal (o:FileInfo) =
-        { key = o.FullName
+        { key = o.Name
           etag = Utils.Md5Hash o.FullName
           status = Local
           localModifiedDate = Some o.CreationTime
           remoteModifiedDate = None }
           
-    let fromLocalRemote (l:T) (r:T) =
+    let fromLocalRemote (r:ControlledFile) (l:ControlledFile) =
         { key = r.key
           etag = r.etag
           status = Identical
           localModifiedDate = l.localModifiedDate
           remoteModifiedDate = r.remoteModifiedDate }
-//    let fromLocalRemote (l:FileInfo) (r:S3Object) =
-//        { key = r.Key
-//          etag = r.ETag
-//          status = Identical
-//          localModifiedDate = Some l.CreationTime
-//          remoteModifiedDate = Some r.LastModified }
-
-//type SyncPoint(bucketName) =
-//    member x.BucketName = bucketName
 
 type Count = All | Zero | Number of int
 type RuleSync = Latest
 type Rule = { pattern : Regex
               count : Count
               sync : RuleSync }
-
+              
 type SyncTrigger = Manual | Periodic of TimeSpan
 
 type FileSyncAction = NoAction | GetRemote | SendLocal | ResolveConflict
-type FileSyncPreview = { file : ControlledFile.T
+type FileSyncPreview = { file : ControlledFile
                          action : FileSyncAction }
+type SyncPoint =
+    { bucketName : string
+      path : string
+      rules : Rule[]
+      trigger : SyncTrigger }
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module Rule =
+    let fromPattern pattern count =
+        { pattern = Regex(pattern)
+          count = count
+          sync = Latest }
+
+    let modifiedDate (f:ControlledFile) =
+        match f.localModifiedDate, f.remoteModifiedDate with
+        | Some d, None | None, Some d -> d
+        | Some a, Some b -> max a b
+        | _ -> failwith "Controlled file has neither a local modification date nor a remote one"
+
+    let takeRule (c:Count) (files:ControlledFile[]) =
+        match c with
+        | All -> files
+        | Zero -> Array.empty
+        | Number(n) -> files |> Array.sortByDescending modifiedDate |> Array.take (min n files.Length)
+        
+    let matchRule (files:ControlledFile[]) (result:Set<ControlledFile>) (r:Rule) =
+        match r.sync with
+        | Latest -> files
+                    |> Array.filter (fun f ->  r.pattern.IsMatch f.key)
+                    |> takeRule r.count
+                    |> Set.ofArray
+                    |> Set.union result
+        | _ -> failwith "not implemented"
+    let matchRules (sp:SyncPoint) files =
+        sp.rules |> Array.fold (matchRule files) Set.empty |> Array.ofSeq
+//        files |> Array.filter (fun f -> Array.exists (matchRule f) sp.rules)
+                         
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module SyncPoint =
     open Newtonsoft.Json
+    open Newtonsoft.Json.Converters
+    open System.Threading
 
-    type T = { bucketName : string
-               path : string
-               rules : Rule[]
-               trigger : SyncTrigger }
-    type FetchResult = T * DateTime * ControlledFile.T[]
+    type FetchResult = SyncPoint * DateTime * ControlledFile[]
+
+    let private settings = new JsonSerializerSettings(Converters=ResizeArray([RegexConverter() :> JsonConverter]),
+                                                      Formatting = Formatting.Indented)
     let save path sp = 
-        let json = JsonConvert.SerializeObject(sp, Formatting.Indented)
+        let json = JsonConvert.SerializeObject(sp, settings)
         do System.IO.File.WriteAllText(path, json)
+    let load path =
+        let json = File.ReadAllText(path)
+        JsonConvert.DeserializeObject<SyncPoint>(json)//, settings)
 
-    let load path = JsonConvert.DeserializeObject<T>(File.ReadAllText(path))
+    let create bucketName path rules trigger : SyncPoint = { bucketName = bucketName
+                                                             path = path
+                                                             rules = rules
+                                                             trigger = trigger }
 
-    let create bucketName path rules trigger : T = { bucketName = bucketName
-                                                     path = path
-                                                     rules = rules
-                                                     trigger = trigger }
+    let localPath sp f = Path.Combine(sp.path, f.key)
+
     let listBuckets (s3:S3.IAmazonS3) = s3.ListBuckets().Buckets
     let listLocalFiles sp =
         let d =
@@ -111,8 +149,10 @@ module SyncPoint =
             let! r = s3.ListObjectsAsync (S3.Model.ListObjectsRequest(BucketName = sp.bucketName)) |> Async.AwaitTask
             return r.S3Objects |> Seq.map ControlledFile.fromS3Object |> List.ofSeq
         }
-    let fetch (s3:S3.IAmazonS3) sp =
-        let fileKey (f:ControlledFile.T) = (f.key,f)
+
+   
+    let fetch (s3:S3.IAmazonS3) withRules (sp:SyncPoint) =
+        let fileKey (f:ControlledFile) = (f.key,f)
         async {
             let time = DateTime.Now
             let! rf = s3.ListObjectsAsync (S3.Model.ListObjectsRequest(BucketName = sp.bucketName)) |> Async.AwaitTask
@@ -122,9 +162,36 @@ module SyncPoint =
                         |> Map.toSeq
                         |> Seq.map snd
                         |> Seq.toArray
-            return (sp,time,files)
+            let finalFiles = if withRules then files |> Rule.matchRules sp else files
+            return (sp,time,finalFiles)
 //            return rmap
         }
-    let syncPreview (s3:S3.IAmazonS3) sp (files:ControlledFile.T[]) =
-        files |> Array.map (fun f -> { file = f; action = NoAction })
+    let syncPreview (s3:S3.IAmazonS3) sp (files:ControlledFile[]) =
+        let determineAction f =
+            match f.status with
+            | Identical -> NoAction
+            | Local -> SendLocal
+            | Remote -> GetRemote
+        files |> Array.map (fun f -> { file = f; action = determineAction f })
+
+
+    let doSync (s3:S3.IAmazonS3) sp (files:FileSyncPreview[]) =
+        let get f = 
+            async {
+                let! resp = s3.GetObjectAsync(GetObjectRequest(BucketName=sp.bucketName, Key=f.file.key)) |> Async.AwaitTask
+                do! resp.WriteResponseStreamToFileAsync((localPath sp f.file), false, CancellationToken.None) |> Async.AwaitTask
+            }
+                            
+        let put f =
+            s3.PutObjectAsync(PutObjectRequest(BucketName=sp.bucketName, Key=f.file.key,FilePath=localPath sp f.file)) |> Async.AwaitTask
         
+        let toGet, toSet = files
+                           |> Array.filter (fun f -> f.action <> NoAction)
+                           |> Array.partition (fun f -> f.action = GetRemote)
+        async {
+            let gets = toGet |> Array.map (get >> Async.RunSynchronously)
+            return gets
+        }
+//        let tasksGet = toGet |> Array.map get
+//        let tasksSet = toSet |> Array.map put
+//        Array. |> Async.Parallel
