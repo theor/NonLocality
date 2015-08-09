@@ -44,13 +44,17 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Library1.fs" />
     <None Include="Script.fsx" />
     <None Include="paket.references" />
     <None Include="paket.template" />
     <None Include="Scripts\load-references.fsx" />
     <None Include="Scripts\load-project.fsx" />
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Utils.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Rule.fs" />
+    <Compile Include="SyncPoint.fs" />
+    <Compile Include="Library1.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\FSharp.Qualia\src\FSharp.Qualia.WPF\FSharp.Qualia.WPF.fsproj">

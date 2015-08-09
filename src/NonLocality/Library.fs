@@ -10,7 +10,6 @@ open Amazon.S3
 open FsXaml
 open FSharp.Qualia
 open FSharp.Qualia.WPF
-open NonLocality.Lib
 open System.Threading
 open MahApps.Metro.Controls
 
@@ -88,11 +87,11 @@ type App = XAML<"App.xaml">
 [<EntryPoint>]
 [<STAThread>]
 let main args =
-    let p = Profiles.getProfile()
+    let p = NonLocality.Lib.Profiles.getProfile()
     if Option.isNone p then 1
     else
         let pp = p.Value
-        let s3 = Profiles.createClient pp
+        let s3 = NonLocality.Lib.Profiles.createClient pp
 //        let buckets = SyncPoint.listBuckets s3
         let sp = SyncPoint.load "..\\..\\sp.json"
         tracefn "%A" sp
