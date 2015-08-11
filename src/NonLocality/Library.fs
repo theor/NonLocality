@@ -42,6 +42,9 @@ type SyncModel() =
     member val Items = new ObservableCollection<FileSyncPreview>()
     member val SelectedItem = new ReactiveProperty<FileSyncPreview option>(None)
     member val Refresh = new ReactiveProperty<Unit>(())
+    
+    member val s3:IAmazonS3 = null with get,set
+    member val sp:SyncPoint option = None with get,set
 
 type SyncView(elt:SyncWindow, m) =
     inherit DerivedCollectionSourceView<Events, MetroWindow, SyncModel>(elt.Root, m)
@@ -60,21 +63,36 @@ type SyncView(elt:SyncWindow, m) =
         m.SelectedItem |> Observable.add (fun i -> elt.label.Content <- sprintf "Press <DEL> to delete the selection item. Current Selection: %A" i)
         ()
 
-type SyncController(s3:IAmazonS3, sp:SyncPoint) =
+type SyncController() =
+    let init (m:SyncModel) =
+        m.sp <- SyncPoint.load "..\\..\\sp.json"
+        let p = NonLocality.Lib.Profiles.getProfile()
+        match p with
+        | None ->
+            let prd = ProfileWindow.Dispatcher()
+            let prm = ProfileWindow.Model()
+            let prw = ProfileWindow.ProfileView(ProfileWindow.ProfileWindow(), prm)
+            use ev = EventLoop(prw, prd).Start()
+            prw.Root.ShowDialog() |> ignore
+        | Some pp -> m.s3 <- NonLocality.Lib.Profiles.createClient pp
+        
     let fetch (m:SyncModel) =
+        match m.sp, m.s3 with
+        | None, _ | _, null -> init m
+        | _ -> ()
         async {
             do m.Items.Clear()
-            let! (_,_,files) = sp |> SyncPoint.fetch s3 true
-            let syncPreview = files |> SyncPoint.syncPreview s3 sp
+            let! (_,_,files) = m.sp.Value |> SyncPoint.fetch m.s3 true
+            let syncPreview = files |> SyncPoint.syncPreview m.s3 m.sp.Value
             do syncPreview |> Array.iter (m.Items.Add)
         }
     member x.doSync (m:SyncModel) =
         async {
-            do! SyncPoint.doSync s3 sp (Array.ofSeq m.Items) |> Async.Ignore
+            do! SyncPoint.doSync m.s3 m.sp.Value (Array.ofSeq m.Items) |> Async.Ignore
             do! fetch m
         }
     interface IDispatcher<Events,SyncModel> with
-        member x.InitModel m = ()
+        member x.InitModel m =()
         member x.Dispatcher = 
             function
             | Fetch -> Async fetch
@@ -84,28 +102,23 @@ type SyncController(s3:IAmazonS3, sp:SyncPoint) =
 
 type App = XAML<"App.xaml">
 
+//let run pp =
+
 [<EntryPoint>]
 [<STAThread>]
 let main args =
-    let p = NonLocality.Lib.Profiles.getProfile()
-    if Option.isNone p then 1
-    else
-        let pp = p.Value
-        let s3 = NonLocality.Lib.Profiles.createClient pp
 //        let buckets = SyncPoint.listBuckets s3
-        let sp = SyncPoint.load "..\\..\\sp.json"
-        tracefn "%A" sp
 //        let sp = SyncPoint.create "sync-bucket-test" "F:\\tmp\\nonlocality"  [||] SyncTrigger.Manual
 //        let sp = { sp with rules = [| Rule.fromPattern "\\*\\.jpg" (Number 1) |] }
 //        SyncPoint.save "..\\..\\sp.json" sp
 //        let sp = SyncPoint.create "sync-bucket-test" "F:\\tmp\\nonlocality"  [||] SyncTrigger.Manual
 //        let json = JsonConvert.SerializeObject(sp, Formatting.Indented)
 //        do System.IO.File.WriteAllText(path, json)
-        let app = App()
-        let lm = SyncModel()
-        let v = SyncView(new SyncWindow(),lm)
-        let c = SyncController(s3, sp)
-        let loop = EventLoop(v, c)
+    let app = App()
+    let lm = SyncModel()
+    let v = SyncView(new SyncWindow(),lm)
+    let c = SyncController()
+    let loop = EventLoop(v, c)
 //        use l = loop.Start()
-        WpfApp.runApp loop v app.Root
+    WpfApp.runApp loop v app.Root
 

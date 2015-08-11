@@ -28,6 +28,9 @@ module Profiles =
         match l with
         | [] -> None
         | p :: _ -> Some (ProfileManager.GetAWSCredentials(p))
+    let registerProfile profileName accessKeyId secretKey =
+        ProfileManager.RegisterProfile(profileName, accessKeyId, secretKey)
+        ProfileManager.GetAWSCredentials(profileName)
     let listProfiles() = ProfileManager.ListProfileNames()
     let createClient (p:Amazon.Runtime.AWSCredentials) =
         AWSClientFactory.CreateAmazonS3Client(p, Amazon.RegionEndpoint.USEast1)

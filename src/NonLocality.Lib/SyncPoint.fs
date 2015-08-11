@@ -17,8 +17,11 @@ let save path sp =
     let json = JsonConvert.SerializeObject(sp, settings)
     do System.IO.File.WriteAllText(path, json)
 let load path =
-    let json = File.ReadAllText(path)
-    JsonConvert.DeserializeObject<SyncPoint>(json)//, settings)
+    if not <| File.Exists path
+    then None
+    else
+        let json = File.ReadAllText(path)
+        Some <| JsonConvert.DeserializeObject<SyncPoint>(json, settings)
 
 let create bucketName path rules trigger : SyncPoint = { bucketName = bucketName
                                                          path = path

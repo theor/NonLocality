@@ -60,16 +60,18 @@
   -->
   <Import Project="..\..\.paket\paket.targets" />
   <ItemGroup>
-    <Compile Include="Library.fs" />
-    <None Include="Script.fsx" />
     <None Include="paket.references" />
     <None Include="paket.template" />
     <Content Include="App.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Resource Include="App.xaml" />
+    <None Include="Script.fsx" />
     <Resource Include="SyncWindow.xaml" />
     <Resource Include="SyncItem.xaml" />
+    <Resource Include="ProfileWindow.xaml" />
+    <Compile Include="ProfileWindow.fs" />
+    <Compile Include="Library.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
