@@ -3,4 +3,5 @@ FSharp.Qualia.WPF
 Newtonsoft.Json
 AWSSDK
 MahApps.Metro
+MahApps.Metro.Resources
 Rx-Wpf

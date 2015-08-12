@@ -60,6 +60,18 @@
   -->
   <Import Project="..\..\.paket\paket.targets" />
   <ItemGroup>
+    <Content Include="Resources\Entypo-license.txt">
+      <Paket>True</Paket>
+    </Content>
+    <Content Include="Resources\Entypo.ttf">
+      <Paket>True</Paket>
+    </Content>
+    <Content Include="Resources\Icons.xaml">
+      <Paket>True</Paket>
+    </Content>
+    <Content Include="Resources\WindowsIcons-license.txt">
+      <Paket>True</Paket>
+    </Content>
     <None Include="paket.references" />
     <None Include="paket.template" />
     <Content Include="App.config">
@@ -71,7 +83,7 @@
     <Resource Include="SyncItem.xaml" />
     <Resource Include="ProfileWindow.xaml" />
     <Compile Include="ProfileWindow.fs" />
-    <Compile Include="Library.fs" />
+    <Compile Include="SyncWindow.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
