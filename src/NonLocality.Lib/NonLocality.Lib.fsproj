@@ -51,6 +51,7 @@
     <None Include="Scripts\load-project.fsx" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="Profiles.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Rule.fs" />
     <Compile Include="SyncPoint.fs" />

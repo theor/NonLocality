@@ -9,5 +9,6 @@
         <TextBox x:Name="tbName"/>
         <TextBox x:Name="tbAccessKey"/>
         <TextBox x:Name="tbSecretKey"/>
+        <Button x:Name="btnCreate">Create Profile</Button>
     </StackPanel>
 </Controls:MetroWindow>

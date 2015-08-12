@@ -27,7 +27,7 @@ type SyncItemView(m, elt:SyncItem) =
     inherit View<Events, FrameworkElement, FileSyncPreview>(elt.Root, m)
     let {file=file;action=action} = m
     override x.EventStreams = []
-    override x.SetBindings m =
+    override x.SetBindings _ =
         elt.name.Content <- file.key
         elt.status.Content <- sprintf "%A" file.status
         match action with
@@ -53,19 +53,21 @@ type SyncView(elt:SyncWindow, m) =
         elt.buttonCancel.Click.Add (fun _ -> elt.Root.Close())
 
     override x.EventStreams = [
+        elt.Root.Loaded --> Fetch
         elt.buttonSync.Click --> DoSync
         elt.button.Click --> Fetch
         elt.list.SelectionChanged |> Observable.map (fun _ -> SelectionChanged((cast<SyncItemView> elt.list.SelectedItem |> Option.map(fun v -> v.Model))))
-        elt.list.KeyDown |> Observable.filter (fun (e:Input.KeyEventArgs) -> e.Key = Input.Key.Delete) |> Observable.mapTo Remove
-        Observable.Return Fetch ]
+        elt.list.KeyDown |> Observable.filter (fun (e:Input.KeyEventArgs) -> e.Key = Input.Key.Delete) |> Observable.mapTo Remove ]
     override x.SetBindings m =
-        let collview = x.linkCollection elt.list (fun i -> SyncItemView(i, SyncItem())) m.Items
+        let _ = x.linkCollection elt.list (fun i -> SyncItemView(i, SyncItem())) m.Items
         m.SelectedItem |> Observable.add (fun i -> elt.label.Content <- sprintf "Press <DEL> to delete the selection item. Current Selection: %A" i)
         ()
 
 type SyncController() =
     let init (m:SyncModel) =
-        m.sp <- SyncPoint.load "..\\..\\sp.json"
+        m.sp <- match SyncPoint.load "..\\..\\sp.json" with
+                | None -> SyncPoint.create "sync-bucket-test" @"G:\tmp\nonlocality" [|Rule.fromPattern ".*\\.jpg" (Number 1)|] SyncTrigger.Manual |> Some
+                | Some sp -> Some sp
         let p = NonLocality.Lib.Profiles.getProfile()
         match p with
         | None ->
@@ -73,7 +75,11 @@ type SyncController() =
             let prm = ProfileWindow.Model()
             let prw = ProfileWindow.ProfileView(ProfileWindow.ProfileWindow(), prm)
             use ev = EventLoop(prw, prd).Start()
-            prw.Root.ShowDialog() |> ignore
+            prw.Root.Owner <- Application.Current.MainWindow
+            let _ = prw.Root.ShowDialog() |> Option.ofNullable
+            match prm.Credentials with
+            | Some c -> m.s3 <- Amazon.AWSClientFactory.CreateAmazonS3Client(c, Amazon.RegionEndpoint.USEast1)
+            | None -> failwith "NO CREDENTIALS"
         | Some pp -> m.s3 <- NonLocality.Lib.Profiles.createClient pp
         
     let fetch (m:SyncModel) =

@@ -7,33 +7,7 @@ open Amazon
 open Amazon.Util
 open Amazon.S3.Model
 
-module Utils =
-    open System.Security.Cryptography
 
-    let Md5Hash(filename:string):string =
-        use md5 = MD5.Create()
-        use stream = File.OpenRead(filename)
-        let bytesHash = md5.ComputeHash(stream)
-        BitConverter.ToString(bytesHash).Replace("-", "").ToLower()
-
-    let merge (a : Map<'a, 'b>) (b : Map<'a, 'b>) (f : 'a -> 'b * 'b -> 'b) =
-        Map.fold (fun s k v ->
-            match Map.tryFind k s with
-            | Some v' -> Map.add k (f k (v, v')) s
-            | None -> Map.add k v s) a b
-module Profiles =
-
-    let getProfile() =
-        let l = ProfileManager.ListProfileNames() |> List.ofSeq    
-        match l with
-        | [] -> None
-        | p :: _ -> Some (ProfileManager.GetAWSCredentials(p))
-    let registerProfile profileName accessKeyId secretKey =
-        ProfileManager.RegisterProfile(profileName, accessKeyId, secretKey)
-        ProfileManager.GetAWSCredentials(profileName)
-    let listProfiles() = ProfileManager.ListProfileNames()
-    let createClient (p:Amazon.Runtime.AWSCredentials) =
-        AWSClientFactory.CreateAmazonS3Client(p, Amazon.RegionEndpoint.USEast1)
 
 type Status = Identical | Local | Remote    
 
@@ -111,7 +85,7 @@ module Rule =
                     |> takeRule r.count
                     |> Set.ofArray
                     |> Set.union result
-        | _ -> failwith "not implemented"
+//        | _ -> failwith "not implemented"
     let matchRules (sp:SyncPoint) files =
         sp.rules |> Array.fold (matchRule files) Set.empty |> Array.ofSeq
 //        files |> Array.filter (fun f -> Array.exists (matchRule f) sp.rules)
