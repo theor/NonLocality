@@ -1,14 +1,49 @@
 ﻿<Controls:MetroWindow xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-                      Title="Sync Preview" 
+                      xmlns:local="clr-namespace:ProfileWindow;assembly=NonLocality"
+                      Title="Settings" 
                       Height="350" 
-                      Width="525">
-    <StackPanel>
-        <ComboBox x:Name="cbProfiles"/>
-        <TextBox x:Name="tbName"/>
-        <TextBox x:Name="tbAccessKey"/>
-        <TextBox x:Name="tbSecretKey"/>
-        <Button x:Name="btnCreate">Create Profile</Button>
-    </StackPanel>
+                      Width="525"
+                      BorderBrush="{DynamicResource AccentColorBrush}"
+                      BorderThickness="1">
+    <TabControl>
+        <TabItem Header="AWS Profile">
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Label Content="Select an existing AWS profile"/>
+                <ComboBox x:Name="cbProfiles" Grid.Row="1" Grid.Column="0"/>
+
+                <Rectangle VerticalAlignment="Stretch" Width="1" Margin="2" Stroke="Black" Grid.Row="0" Grid.Column="1" Grid.RowSpan="5"/>
+
+
+                <Label Content="New profile name" Grid.Row="0" Grid.Column="2"/>
+                <TextBox x:Name="tbName" Grid.Row="1" Grid.Column="2"/>
+                <Label Content="Access Key" Grid.Row="2" Grid.Column="2"/>
+                <TextBox x:Name="tbAccessKey" Grid.Row="3" Grid.Column="2"/>
+                <Label Content="Secret Key" Grid.Row="4" Grid.Column="2"/>
+                <TextBox x:Name="tbSecretKey" Grid.Row="5" Grid.Column="2"/>
+                <!--<Label Content="Select an existing AWS profile" Grid.Row="6" Grid.Column="2"/>-->
+                <Button x:Name="btnCreate" Grid.Row="7" Grid.Column="2">Create Profile</Button>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Sync Point">
+            <local:SyncPointSettingsControl/>
+        </TabItem>
+    </TabControl>
 </Controls:MetroWindow>

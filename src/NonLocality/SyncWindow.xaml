@@ -3,26 +3,28 @@
                       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                       Title="Sync Preview" 
                       Height="350" 
-                      Width="525">
+                      Width="525"
+                      BorderBrush="{DynamicResource AccentColorBrush}"
+                      BorderThickness="1">
     <Controls:MetroWindow.RightWindowCommands>
-    <Controls:WindowCommands>
-        <Button Content="settings" />
-        <Button>
-            <StackPanel Orientation="Horizontal">
-                <Rectangle Width="20" Height="20"
+        <Controls:WindowCommands>
+            <!--<Button Content="settings" />-->
+            <Button x:Name="btnSettings">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="20" Height="20"
                    Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
-                    <Rectangle.OpacityMask>
-                        <VisualBrush Stretch="Fill"
-                         Visual="{StaticResource appbar_cupcake}" />
-                    </Rectangle.OpacityMask>
-                </Rectangle>
-                <TextBlock Margin="4 0 0 0"
+                        <Rectangle.OpacityMask>
+                            <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_settings}" />
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <TextBlock Margin="4 0 0 0"
                    VerticalAlignment="Center"
-                   Text="deploy cupcakes" />
-            </StackPanel>
-        </Button>
-    </Controls:WindowCommands>
-        </Controls:MetroWindow.RightWindowCommands>
+                   Text="settings" />
+                </StackPanel>
+            </Button>
+        </Controls:WindowCommands>
+    </Controls:MetroWindow.RightWindowCommands>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -34,13 +36,13 @@
         <Label Grid.Row="1" x:Name="label"/>
         <Button Grid.Row="2" x:Name="button"/>
         <Grid Grid.Row="3" Margin="10">
-          <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*"/>
-              <ColumnDefinition Width="Auto"/>
-              <ColumnDefinition Width="Auto"/>
-          </Grid.ColumnDefinitions>
-          <Button x:Name="buttonSync" Grid.Column="1" Style="{StaticResource AccentedSquareButtonStyle}">Sync</Button>
-          <Button x:Name="buttonCancel" Grid.Column="2" Style="{StaticResource SquareButtonStyle}">Cancel</Button>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="buttonSync" Grid.Column="1" Style="{StaticResource AccentedSquareButtonStyle}">Sync</Button>
+            <Button x:Name="buttonCancel" Grid.Column="2" Style="{StaticResource SquareButtonStyle}">Cancel</Button>
         </Grid>
     </Grid>
 </Controls:MetroWindow>

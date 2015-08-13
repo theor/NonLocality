@@ -78,6 +78,7 @@
     <None Include="Script.fsx" />
     <Resource Include="SyncWindow.xaml" />
     <Resource Include="SyncItem.xaml" />
+    <Resource Include="SyncPointSettings.xaml" />
     <Resource Include="ProfileWindow.xaml" />
     <Compile Include="ProfileWindow.fs" />
     <Compile Include="SyncWindow.fs" />

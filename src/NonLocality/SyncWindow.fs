@@ -18,7 +18,8 @@ let cast<'a> (x:obj) : 'a option =
     | :? 'a as y -> Some y
     | _ -> None
 
-type Events = DoSync | Fetch | Remove | SelectionChanged of FileSyncPreview option
+type Events =
+    | OpenSettings | DoSync | Fetch | Remove | SelectionChanged of FileSyncPreview option
 
 type SyncWindow = XAML<"SyncWindow.xaml", true>
 type SyncItem = XAML<"SyncItem.xaml", true>
@@ -54,6 +55,7 @@ type SyncView(elt:SyncWindow, m) =
 
     override x.EventStreams = [
         elt.Root.Loaded --> Fetch
+        elt.btnSettings.Click --> OpenSettings
         elt.buttonSync.Click --> DoSync
         elt.button.Click --> Fetch
         elt.list.SelectionChanged |> Observable.map (fun _ -> SelectionChanged((cast<SyncItemView> elt.list.SelectedItem |> Option.map(fun v -> v.Model))))
@@ -64,6 +66,16 @@ type SyncView(elt:SyncWindow, m) =
         ()
 
 type SyncController() =
+    let openSettings () =
+        let prd = ProfileWindow.Dispatcher()
+        let prm = ProfileWindow.Model()
+        let prw = ProfileWindow.ProfileView(ProfileWindow.ProfileWindow(), prm)
+        use ev = EventLoop(prw, prd).Start()
+        prw.Root.Owner <- Application.Current.MainWindow
+        match prw.Root.ShowDialog() |> Option.ofNullable with
+        | Some true -> prm.Credentials
+        | _ -> None
+        
     let init (m:SyncModel) =
         m.sp <- match SyncPoint.load "..\\..\\sp.json" with
                 | None -> SyncPoint.create "sync-bucket-test" @"G:\tmp\nonlocality" [|Rule.fromPattern ".*\\.jpg" (Number 1)|] SyncTrigger.Manual |> Some
@@ -71,13 +83,7 @@ type SyncController() =
         let p = NonLocality.Lib.Profiles.getProfile()
         match p with
         | None ->
-            let prd = ProfileWindow.Dispatcher()
-            let prm = ProfileWindow.Model()
-            let prw = ProfileWindow.ProfileView(ProfileWindow.ProfileWindow(), prm)
-            use ev = EventLoop(prw, prd).Start()
-            prw.Root.Owner <- Application.Current.MainWindow
-            let _ = prw.Root.ShowDialog() |> Option.ofNullable
-            match prm.Credentials with
+            match openSettings() with
             | Some c -> m.s3 <- Amazon.AWSClientFactory.CreateAmazonS3Client(c, Amazon.RegionEndpoint.USEast1)
             | None -> failwith "NO CREDENTIALS"
         | Some pp -> m.s3 <- NonLocality.Lib.Profiles.createClient pp
@@ -101,6 +107,7 @@ type SyncController() =
         member x.InitModel m =()
         member x.Dispatcher = 
             function
+            | OpenSettings -> Sync (fun _ -> openSettings() |> ignore)
             | Fetch -> Async fetch
             | Remove -> Sync (fun m -> m.SelectedItem.Value |> Option.iter (m.Items.Remove >> ignore))
             | SelectionChanged item -> printfn "%A" item; Sync (fun m -> m.SelectedItem.Value <- item)
