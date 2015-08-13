@@ -79,6 +79,7 @@
     <Resource Include="SyncWindow.xaml" />
     <Resource Include="SyncItem.xaml" />
     <Resource Include="SyncPointSettings.xaml" />
+    <Compile Include="SyncPointSettings.fs" />
     <Resource Include="ProfileWindow.xaml" />
     <Compile Include="ProfileWindow.fs" />
     <Compile Include="SyncWindow.fs" />

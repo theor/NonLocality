@@ -7,8 +7,6 @@ open MahApps.Metro.Controls
 open NonLocality.Lib
 open Amazon.Runtime
 
-type SyncPointSettingsControl = XAML<"SyncPointSettings.xaml", true>
-
 type Profile = { name: string
                  accessKey: string
                  secretKey: string}

@@ -1,7 +1,7 @@
 ﻿<Controls:MetroWindow xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-                      xmlns:local="clr-namespace:ProfileWindow;assembly=NonLocality"
+                      xmlns:local="clr-namespace:SyncPointSettings;assembly=NonLocality"
                       Title="Settings" 
                       Height="350" 
                       Width="525"
