@@ -4,7 +4,26 @@
                       Title="Sync Preview" 
                       Height="350" 
                       Width="525">
-     <Grid>
+    <Controls:MetroWindow.RightWindowCommands>
+    <Controls:WindowCommands>
+        <Button Content="settings" />
+        <Button>
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Width="20" Height="20"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                    <Rectangle.OpacityMask>
+                        <VisualBrush Stretch="Fill"
+                         Visual="{StaticResource appbar_cupcake}" />
+                    </Rectangle.OpacityMask>
+                </Rectangle>
+                <TextBlock Margin="4 0 0 0"
+                   VerticalAlignment="Center"
+                   Text="deploy cupcakes" />
+            </StackPanel>
+        </Button>
+    </Controls:WindowCommands>
+        </Controls:MetroWindow.RightWindowCommands>
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>

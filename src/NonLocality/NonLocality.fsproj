@@ -66,9 +66,6 @@
     <Content Include="Resources\Entypo.ttf">
       <Paket>True</Paket>
     </Content>
-    <Content Include="Resources\Icons.xaml">
-      <Paket>True</Paket>
-    </Content>
     <Content Include="Resources\WindowsIcons-license.txt">
       <Paket>True</Paket>
     </Content>
@@ -84,6 +81,7 @@
     <Resource Include="ProfileWindow.xaml" />
     <Compile Include="ProfileWindow.fs" />
     <Compile Include="SyncWindow.fs" />
+    <Resource Include="Icons.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
