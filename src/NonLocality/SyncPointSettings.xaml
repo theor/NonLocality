@@ -1,12 +1,17 @@
 ﻿<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                      xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+             MinWidth="300">
     <StackPanel>
+        <Label>Bucket Name</Label>
         <TextBox x:Name="tbBucketName"/>
+        <Label>LocalPath</Label>
         <TextBox x:Name="tbPath"/>
+        <Label>Sync Trigger</Label>
         <ComboBox x:Name="cbSyncType"/>
+        <Label>Sync Frequency</Label>
         <Controls:NumericUpDown x:Name="nudSyncFreq"/>
-        <Button x:Name="btnAddRule"/>
+        <Button x:Name="btnAddRule" Content="Add Rule"/>
         <ListBox x:Name="listRules"/>
     </StackPanel>
 </UserControl>

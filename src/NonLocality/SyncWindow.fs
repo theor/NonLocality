@@ -66,9 +66,9 @@ type SyncView(elt:SyncWindow, m) =
         ()
 
 type SyncController() =
-    let openSettings () =
+    let openSettings (m:SyncPoint option) =
         let prd = ProfileWindow.Dispatcher()
-        let prm = ProfileWindow.Model()
+        let prm = ProfileWindow.Model(m)
         let prw = ProfileWindow.ProfileView(ProfileWindow.ProfileWindow(), prm)
         use ev = EventLoop(prw, prd).Start()
         prw.Root.Owner <- Application.Current.MainWindow
@@ -83,7 +83,7 @@ type SyncController() =
         let p = NonLocality.Lib.Profiles.getProfile()
         match p with
         | None ->
-            match openSettings() with
+            match openSettings m.sp with
             | Some c -> m.s3 <- Amazon.AWSClientFactory.CreateAmazonS3Client(c, Amazon.RegionEndpoint.USEast1)
             | None -> failwith "NO CREDENTIALS"
         | Some pp -> m.s3 <- NonLocality.Lib.Profiles.createClient pp
@@ -104,10 +104,10 @@ type SyncController() =
             do! fetch m
         }
     interface IDispatcher<Events,SyncModel> with
-        member x.InitModel m =()
+        member x.InitModel _ =()
         member x.Dispatcher = 
             function
-            | OpenSettings -> Sync (fun _ -> openSettings() |> ignore)
+            | OpenSettings -> Sync (fun m -> openSettings(m.sp) |> ignore)
             | Fetch -> Async fetch
             | Remove -> Sync (fun m -> m.SelectedItem.Value |> Option.iter (m.Items.Remove >> ignore))
             | SelectionChanged item -> printfn "%A" item; Sync (fun m -> m.SelectedItem.Value <- item)
@@ -119,7 +119,7 @@ type App = XAML<"App.xaml">
 
 [<EntryPoint>]
 [<STAThread>]
-let main args =
+let main _ =
 //        let buckets = SyncPoint.listBuckets s3
 //        let sp = SyncPoint.create "sync-bucket-test" "F:\\tmp\\nonlocality"  [||] SyncTrigger.Manual
 //        let sp = { sp with rules = [| Rule.fromPattern "\\*\\.jpg" (Number 1) |] }

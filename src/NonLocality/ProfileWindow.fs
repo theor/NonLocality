@@ -10,13 +10,14 @@ open SyncPointSettings
 open System.Windows
 
 
-type Model() =
+type Model(sp) =
 //    member val ProfileName = ReactiveProperty("")
 //    member val AccessKey = ReactiveProperty("")
 //    member val SecretKey = ReactiveProperty("")
     member val Profiles:ObservableCollection<string> = ObservableCollection()
     member val SelectedProfile = ""
     member val Credentials : AWSCredentials option = None with get,set
+    member val SyncPoint : SyncPoint option = sp
 
 
 type ProfileWindow = XAML<"ProfileWindow.xaml", true>
@@ -24,8 +25,7 @@ type ProfileView (w:ProfileWindow, mw) =
     inherit FSharp.Qualia.WPF.DerivedCollectionSourceView<Events, MetroWindow, Model>(w.Root, mw)
     override x.SetBindings m =
         w.cbProfiles.ItemsSource <- m.Profiles
-        let spm = SyncPointSettings.Model()
-        let spView = SyncPointSettings.SyncPointSettingsView(w.ucSyncPoint :?> SyncPointSettingsControl, spm)
+        let spView = SyncPointSettings.SyncPointSettingsView(w.ucSyncPoint :?> SyncPointSettingsControl, mw.SyncPoint.Value)
         x.ComposeViewEvents spView (fun x -> SubEvent x) |> ignore
     override x.EventStreams = [
         w.Root.Loaded --> LoadProfiles
@@ -43,8 +43,8 @@ type Dispatcher() =
             | LoadProfiles -> Sync (fun m -> m.Profiles.Clear(); Profiles.listProfiles() |> Seq.iter m.Profiles.Add)
             | Cancel -> failwith "Not implemented yet"
             | CreateProfile { name=n; accessKey=a; secretKey=s } -> Sync (create n a s)
-            | SelectedProfile s -> Sync (fun m -> ())
-            | SubEvent (x) -> Sync (fun m -> tracefn "%A" x)
+            | SelectedProfile _ -> Sync (fun _ -> ())
+            | SubEvent (x) -> SyncPointSettings.Dispatcher.dispatcher x
         member x.InitModel _ = 
             ()
         

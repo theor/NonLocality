@@ -20,12 +20,17 @@ type Events =
 
 
 type SyncPointSettingsControl = XAML<"SyncPointSettings.xaml", true>
-type Model() =
-    member val SyncPoint:SyncPoint option = None
 
 type SyncPointSettingsView(elt:SyncPointSettingsControl, m) =
-    inherit View<SubEvents, FrameworkElement, Model>(elt.Root, m)
-        override x.SetBindings m =()
+    inherit View<SubEvents, FrameworkElement, SyncPoint>(elt.Root, m)
+        override x.SetBindings m =
+            elt.tbBucketName.Text <- m.bucketName
+            elt.tbPath.Text <- m.path
+            elt.cbSyncType.Text <- m.trigger.ToString()
     override x.EventStreams = [
         elt.btnAddRule.Click --> AddRule
     ]
+module Dispatcher =
+    let dispatcher x = 
+        match x with
+        | AddRule -> Sync (fun _ -> tracefn "%A" x)
