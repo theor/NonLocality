@@ -6,11 +6,10 @@ open FSharp.Qualia
 open MahApps.Metro.Controls
 open NonLocality.Lib
 open Amazon.Runtime
+open SyncPointSettings
+open System.Windows
 
-type Profile = { name: string
-                 accessKey: string
-                 secretKey: string}
-type Events = Cancel | CreateProfile of Profile | SelectedProfile of string | LoadProfiles
+
 type Model() =
 //    member val ProfileName = ReactiveProperty("")
 //    member val AccessKey = ReactiveProperty("")
@@ -25,6 +24,9 @@ type ProfileView (w:ProfileWindow, mw) =
     inherit FSharp.Qualia.WPF.DerivedCollectionSourceView<Events, MetroWindow, Model>(w.Root, mw)
     override x.SetBindings m =
         w.cbProfiles.ItemsSource <- m.Profiles
+        let spm = SyncPointSettings.Model()
+        let spView = SyncPointSettings.SyncPointSettingsView(w.ucSyncPoint :?> SyncPointSettingsControl, spm)
+        x.ComposeView spView |> ignore
     override x.EventStreams = [
         w.Root.Loaded --> LoadProfiles
         w.cbProfiles.SelectionChanged |> Observable.map (fun _ -> SelectedProfile (string w.cbProfiles.SelectedItem))
@@ -43,6 +45,7 @@ type Dispatcher() =
             | CreateProfile { name=n; accessKey=a; secretKey=s } -> Sync (create n a s)
             | SelectedProfile s -> Sync (fun m -> ())
         
+            | AddRule -> Sync (fun m -> ())
         member x.InitModel _ = 
             ()
         

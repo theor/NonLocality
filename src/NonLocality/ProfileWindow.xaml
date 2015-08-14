@@ -43,7 +43,7 @@
             </Grid>
         </TabItem>
         <TabItem Header="Sync Point">
-            <local:SyncPointSettingsControl/>
+            <local:SyncPointSettingsControl x:Name="ucSyncPoint"/>
         </TabItem>
     </TabControl>
 </Controls:MetroWindow>
