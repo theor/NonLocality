@@ -12,16 +12,19 @@ open System.Windows
 type Profile = { name: string
                  accessKey: string
                  secretKey: string}
+type SubEvents =
+| AddRule
 type Events =
 | Cancel | CreateProfile of Profile | SelectedProfile of string | LoadProfiles
-| AddRule
+| SubEvent of SubEvents
+
 
 type SyncPointSettingsControl = XAML<"SyncPointSettings.xaml", true>
 type Model() =
     member val SyncPoint:SyncPoint option = None
 
 type SyncPointSettingsView(elt:SyncPointSettingsControl, m) =
-    inherit View<Events, FrameworkElement, Model>(elt.Root, m)
+    inherit View<SubEvents, FrameworkElement, Model>(elt.Root, m)
         override x.SetBindings m =()
     override x.EventStreams = [
         elt.btnAddRule.Click --> AddRule

@@ -26,7 +26,7 @@ type ProfileView (w:ProfileWindow, mw) =
         w.cbProfiles.ItemsSource <- m.Profiles
         let spm = SyncPointSettings.Model()
         let spView = SyncPointSettings.SyncPointSettingsView(w.ucSyncPoint :?> SyncPointSettingsControl, spm)
-        x.ComposeView spView |> ignore
+        x.ComposeViewEvents spView (fun x -> SubEvent x) |> ignore
     override x.EventStreams = [
         w.Root.Loaded --> LoadProfiles
         w.cbProfiles.SelectionChanged |> Observable.map (fun _ -> SelectedProfile (string w.cbProfiles.SelectedItem))
@@ -44,8 +44,7 @@ type Dispatcher() =
             | Cancel -> failwith "Not implemented yet"
             | CreateProfile { name=n; accessKey=a; secretKey=s } -> Sync (create n a s)
             | SelectedProfile s -> Sync (fun m -> ())
-        
-            | AddRule -> Sync (fun m -> ())
+            | SubEvent (x) -> Sync (fun m -> tracefn "%A" x)
         member x.InitModel _ = 
             ()
         
