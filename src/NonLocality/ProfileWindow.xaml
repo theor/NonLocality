@@ -7,6 +7,11 @@
                       Width="525"
                       BorderBrush="{DynamicResource AccentColorBrush}"
                       BorderThickness="1">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom"  Orientation="Horizontal" FlowDirection="RightToLeft">
+            <Button Width="50" Margin="3">Cancel</Button>
+            <Button Width="50" Margin="3">Save</Button>
+        </StackPanel>
     <TabControl>
         <TabItem Header="AWS Profile">
             <Grid Margin="10">
@@ -42,8 +47,9 @@
                 <Button x:Name="btnCreate" Grid.Row="7" Grid.Column="2">Create Profile</Button>
             </Grid>
         </TabItem>
-        <TabItem Header="Sync Point">
+        <TabItem Header="Sync Point" IsSelected="true">
             <local:SyncPointSettingsControl x:Name="ucSyncPoint"/>
         </TabItem>
     </TabControl>
+    </DockPanel>
 </Controls:MetroWindow>

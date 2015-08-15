@@ -19,7 +19,6 @@ type Model(sp) =
     member val Credentials : AWSCredentials option = None with get,set
     member val SyncPoint : SyncPoint option = sp
 
-
 type ProfileWindow = XAML<"ProfileWindow.xaml", true>
 type ProfileView (w:ProfileWindow, mw) =
     inherit FSharp.Qualia.WPF.DerivedCollectionSourceView<Events, MetroWindow, Model>(w.Root, mw)

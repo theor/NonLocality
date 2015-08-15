@@ -8,10 +8,14 @@
         <Label>LocalPath</Label>
         <TextBox x:Name="tbPath"/>
         <Label>Sync Trigger</Label>
-        <ComboBox x:Name="cbSyncType"/>
+        <ComboBox x:Name="cbSyncType">
+            <ComboBoxItem Name="cbiSyncTypeManual">Manual</ComboBoxItem>
+            <ComboBoxItem Name="cbiSyncTypeScheduled">Scheduled</ComboBoxItem>
+        </ComboBox>
         <Label>Sync Frequency</Label>
         <Controls:NumericUpDown x:Name="nudSyncFreq"/>
-        <Button x:Name="btnAddRule" Content="Add Rule"/>
+        <Label>Rules</Label>
         <ListBox x:Name="listRules"/>
+        <Button x:Name="btnAddRule" Content="Add Rule"/>
     </StackPanel>
 </UserControl>

@@ -55,6 +55,7 @@ type SyncView(elt:SyncWindow, m) =
 
     override x.EventStreams = [
         elt.Root.Loaded --> Fetch
+        elt.Root.Loaded --> OpenSettings
         elt.btnSettings.Click --> OpenSettings
         elt.buttonSync.Click --> DoSync
         elt.button.Click --> Fetch
@@ -78,7 +79,8 @@ type SyncController() =
         
     let init (m:SyncModel) =
         m.sp <- match SyncPoint.load "..\\..\\sp.json" with
-                | None -> SyncPoint.create "sync-bucket-test" @"G:\tmp\nonlocality" [|Rule.fromPattern ".*\\.jpg" (Number 1)|] SyncTrigger.Manual |> Some
+                | None -> SyncPoint.create "sync-bucket-test" @"G:\tmp\nonlocality" [|Rule.fromPattern ".*\\.jpg" (Number 1)
+                                                                                      Rule.fromPattern ".*\\.png" All|] SyncTrigger.Manual |> Some
                 | Some sp -> Some sp
         let p = NonLocality.Lib.Profiles.getProfile()
         match p with

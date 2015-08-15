@@ -40,7 +40,7 @@ module ControlledFile =
           localModifiedDate = l.localModifiedDate
           remoteModifiedDate = r.remoteModifiedDate }
 
-type Count = All | Zero | Number of int
+type Count = All | Number of int
 type RuleSync = Latest
 type Rule = { pattern : Regex
               count : Count
