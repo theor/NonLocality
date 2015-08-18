@@ -23,6 +23,17 @@
                    Text="settings" />
                 </StackPanel>
             </Button>
+            <Button x:Name="btnOpenFolder">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="20" Height="20"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_folder_open}" />
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                </StackPanel>
+            </Button>
         </Controls:WindowCommands>
     </Controls:MetroWindow.RightWindowCommands>
     <Grid>

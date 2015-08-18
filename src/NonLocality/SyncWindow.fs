@@ -5,6 +5,8 @@ open System.Reactive.Linq
 open System.Windows
 open System.Windows.Controls
 open System
+open System.IO
+open System.Diagnostics
 
 open Amazon.S3
 open FsXaml
@@ -19,7 +21,7 @@ let cast<'a> (x:obj) : 'a option =
     | _ -> None
 
 type Events =
-    | OpenSettings | DoSync | Fetch | Remove | SelectionChanged of FileSyncPreview option
+    | OpenSettings | OpenSyncFolder | DoSync | Fetch | Remove | SelectionChanged of FileSyncPreview option
 
 type SyncWindow = XAML<"SyncWindow.xaml", true>
 type SyncItem = XAML<"SyncItem.xaml", true>
@@ -56,6 +58,7 @@ type SyncView(elt:SyncWindow, m) =
     override x.EventStreams = [
         elt.Root.Loaded --> Fetch
         elt.Root.Loaded --> OpenSettings
+        elt.btnOpenFolder.Click --> OpenSyncFolder
         elt.btnSettings.Click --> OpenSettings
         elt.buttonSync.Click --> DoSync
         elt.button.Click --> Fetch
@@ -100,6 +103,9 @@ type SyncController() =
             let syncPreview = files |> SyncPoint.syncPreview m.s3 m.sp.Value
             do syncPreview |> Array.iter (m.Items.Add)
         }
+    let openfolder (m:SyncModel) =
+        m.sp |> Option.iter (fun s -> if Directory.Exists(s.path) then Process.Start s.path |> ignore)
+        
     member x.doSync (m:SyncModel) =
         async {
             do! SyncPoint.doSync m.s3 m.sp.Value (Array.ofSeq m.Items) |> Async.Ignore
@@ -114,7 +120,7 @@ type SyncController() =
             | Remove -> Sync (fun m -> m.SelectedItem.Value |> Option.iter (m.Items.Remove >> ignore))
             | SelectionChanged item -> printfn "%A" item; Sync (fun m -> m.SelectedItem.Value <- item)
             | DoSync -> Async x.doSync
-
+            | OpenSyncFolder -> Sync openfolder
 type App = XAML<"App.xaml">
 
 //let run pp =

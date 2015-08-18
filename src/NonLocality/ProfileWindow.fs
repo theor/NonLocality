@@ -15,7 +15,7 @@ type Model(sp) =
 //    member val AccessKey = ReactiveProperty("")
 //    member val SecretKey = ReactiveProperty("")
     member val Profiles:ObservableCollection<string> = ObservableCollection()
-    member val SelectedProfile = ""
+    member val SelectedProfile = ReactiveProperty("") with get,set
     member val Credentials : AWSCredentials option = None with get,set
     member val SyncPoint : SyncPoint option = sp
 
@@ -24,6 +24,7 @@ type ProfileView (w:ProfileWindow, mw) =
     inherit FSharp.Qualia.WPF.DerivedCollectionSourceView<Events, MetroWindow, Model>(w.Root, mw)
     override x.SetBindings m =
         w.cbProfiles.ItemsSource <- m.Profiles
+        m.SelectedProfile |> Observable.add (fun _ -> w.cbProfiles.SelectedValue <- m.SelectedProfile.Value)
         let spView = SyncPointSettings.SyncPointSettingsView(w.ucSyncPoint :?> SyncPointSettingsControl, mw.SyncPoint.Value)
         x.ComposeViewEvents spView (fun x -> SubEvent x) |> ignore
     override x.EventStreams = [
@@ -39,7 +40,12 @@ type Dispatcher() =
     interface IDispatcher<Events,Model> with
         member x.Dispatcher =
             function
-            | LoadProfiles -> Sync (fun m -> m.Profiles.Clear(); Profiles.listProfiles() |> Seq.iter m.Profiles.Add)
+            | LoadProfiles -> Sync (fun m ->
+                let profiles = Profiles.listProfiles()
+                m.Profiles.Clear()
+                profiles |> Seq.iter m.Profiles.Add
+                if not <| Seq.isEmpty profiles then
+                    m.SelectedProfile.Value <- profiles |> Seq.head)
             | Cancel -> failwith "Not implemented yet"
             | CreateProfile { name=n; accessKey=a; secretKey=s } -> Sync (create n a s)
             | SelectedProfile _ -> Sync (fun _ -> ())
