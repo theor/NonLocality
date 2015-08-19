@@ -72,7 +72,7 @@ type SyncView(elt:SyncWindow, m) =
 type SyncController() =
     let openSettings (m:SyncPoint option) =
         let prd = ProfileWindow.Dispatcher()
-        let prm = ProfileWindow.Model(m)
+        let prm = ProfileWindow.Model(m |> Option.map (fun x -> SyncPointSettings.SyncPointModel(x)))
         let prw = ProfileWindow.ProfileView(ProfileWindow.ProfileWindow(), prm)
         use ev = EventLoop(prw, prd).Start()
         prw.Root.Owner <- Application.Current.MainWindow

@@ -3,16 +3,16 @@
                       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                       xmlns:local="clr-namespace:SyncPointSettings;assembly=NonLocality"
                       Title="Settings" 
-                      Height="350" 
+                      Height="400.389" 
                       Width="525"
                       BorderBrush="{DynamicResource AccentColorBrush}"
                       BorderThickness="1">
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom"  Orientation="Horizontal" FlowDirection="RightToLeft">
-            <Button Width="50" Margin="3">Cancel</Button>
-            <Button Width="50" Margin="3">Save</Button>
+            <Button x:Name="btnCancel" Width="50" Margin="3">Cancel</Button>
+            <Button x:Name="btnSave"  Width="50" Margin="3">Save</Button>
         </StackPanel>
-        <!--<ScrollViewer  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" >-->
+        <ScrollViewer  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" >
             <TabControl >
                 <TabItem Header="AWS Profile">
                     <Grid Margin="10">
@@ -52,6 +52,6 @@
                     <local:SyncPointSettingsControl x:Name="ucSyncPoint"/>
                 </TabItem>
             </TabControl>
-        <!--</ScrollViewer>-->
+        </ScrollViewer>
     </DockPanel>
 </Controls:MetroWindow>

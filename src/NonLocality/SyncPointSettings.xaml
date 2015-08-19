@@ -14,8 +14,11 @@
         </ComboBox>
         <Label>Sync Frequency</Label>
         <Controls:NumericUpDown x:Name="nudSyncFreq"/>
-        <Label>Rules</Label>
+        <DockPanel>
+            <Button x:Name="btnAddRule" Content="Add Rule" DockPanel.Dock="Right"/>
+            <Label>Rules</Label>
+        </DockPanel>
         <ListBox x:Name="listRules"/>
-        <Button x:Name="btnAddRule" Content="Add Rule"/>
+
     </StackPanel>
 </UserControl>

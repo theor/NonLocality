@@ -15,13 +15,15 @@ type Profile = { name: string
                  accessKey: string
                  secretKey: string}
 type SubEvents =
-| AddRule
-type Events =
-| Cancel | CreateProfile of Profile | SelectedProfile of string | LoadProfiles
-| SubEvent of SubEvents
+| AddRule | RemoveRule of RuleModel
+and Events =
+| Cancel | Save of (unit -> unit) | CreateProfile of Profile | SelectedProfile of string | LoadProfiles
+| SubEvent of SyncPointModel * SubEvents
+
+
 
 // Rules
-type RuleModel(r:Rule) =
+and RuleModel(r:Rule) =
     member val pattern = ReactiveProperty(r.pattern.ToString())
     member val count = ReactiveProperty(r.count)
     member val sync = ReactiveProperty(r.sync)
@@ -29,13 +31,18 @@ type RuleModel(r:Rule) =
         { pattern = new Regex(x.pattern.Value)
           count = x.count.Value
           sync = x.sync.Value }
+and SyncPointModel(sp:SyncPoint) =
+    member val rules = ObservableCollection(sp.rules |> Array.map (fun x -> RuleModel(x) ))
+    member val trigger = ReactiveProperty(sp.trigger)
+    member val path = ReactiveProperty(sp.path)
+    member val bucketName = ReactiveProperty(sp.bucketName)
 
 type RuleItemControl = XAML<"RuleItem.xaml", true>
 type RuleItemView(m, elt:RuleItemControl) =
     inherit View<SubEvents, FrameworkElement, RuleModel>(elt.Root, m)
     
     override x.EventStreams =
-        [ //elt.btnDelete.Click |> Observable.map (fun _ ->)
+        [ elt.btnDelete.Click |> Observable.map (fun _ -> RemoveRule x.Model)
         //elt.cbCount.SelectionChanged |> Observable.map (fun _ -> )
         ]
     override x.SetBindings _ =
@@ -57,24 +64,30 @@ type RuleItemView(m, elt:RuleItemControl) =
 // Sync point
 type SyncPointSettingsControl = XAML<"SyncPointSettings.xaml", true>
 
-type SyncPointSettingsView(elt:SyncPointSettingsControl, m) =
-    inherit DerivedCollectionSourceView<SubEvents, FrameworkElement, SyncPoint>(elt.Root, m)
+type SyncPointSettingsView(elt:SyncPointSettingsControl, m:SyncPointModel) =
+    inherit DerivedCollectionSourceView<SubEvents, FrameworkElement, SyncPointModel>(elt.Root, m)
         override x.SetBindings m =
-            elt.tbBucketName.Text <- m.bucketName
-            elt.tbPath.Text <- m.path
-            match m.trigger with
-            | Manual ->
-                elt.cbSyncType.SelectedItem <- elt.cbiSyncTypeManual
-                elt.nudSyncFreq.Visibility <- Visibility.Hidden
-            | Periodic p ->
-                elt.cbSyncType.SelectedItem <- elt.cbiSyncTypeScheduled
-                elt.nudSyncFreq.Value <- System.Nullable(float p.TotalDays)
+            m.bucketName |> Observable.add(fun _ -> elt.tbBucketName.Text <- m.bucketName.Value)
+            m.path |> Observable.add(fun _ ->elt.tbPath.Text <- m.path.Value)
+            m.trigger |> Observable.add(fun _ ->
+                match m.trigger.Value with
+                | Manual ->
+                    elt.cbSyncType.SelectedItem <- elt.cbiSyncTypeManual
+                    elt.nudSyncFreq.Visibility <- Visibility.Hidden
+                | Periodic p ->
+                    elt.cbSyncType.SelectedItem <- elt.cbiSyncTypeScheduled
+                    elt.nudSyncFreq.Value <- System.Nullable(float p.TotalDays))
                 
-            ignore <| x.linkCollection elt.listRules (fun x -> RuleItemView(x, RuleItemControl())) (ObservableCollection(m.rules |> Array.map (fun x -> RuleModel(x))))
+            ignore <| x.linkCollection elt.listRules (fun x -> RuleItemView(x, RuleItemControl())) m.rules
     override x.EventStreams = [
         elt.btnAddRule.Click --> AddRule
     ]
 module Dispatcher =
+    let private removeRule rm (m:SyncPointModel) =
+        m.rules.Remove rm |> ignore
+    let private addRule (m:SyncPointModel) =
+        m.rules.Add(RuleModel(Rule.fromPattern ".*" Count.All))
     let dispatcher x = 
         match x with
-        | AddRule -> Sync (fun _ -> tracefn "%A" x)
+        | AddRule -> Sync(addRule)
+        | RemoveRule rm -> Sync(removeRule rm)
