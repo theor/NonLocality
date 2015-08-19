@@ -82,8 +82,11 @@ type SyncController() =
         
     let init (m:SyncModel) =
         m.sp <- match SyncPoint.load "..\\..\\sp.json" with
-                | None -> SyncPoint.create "sync-bucket-test" @"G:\tmp\nonlocality" [|Rule.fromPattern ".*\\.jpg" (Number 1)
-                                                                                      Rule.fromPattern ".*\\.png" All|] SyncTrigger.Manual |> Some
+                | None ->
+                    let sp = SyncPoint.create "sync-bucket-test" @"G:\tmp\nonlocality" [|Rule.fromPattern ".*\\.jpg" (Number 1)
+                                                                                         Rule.fromPattern ".*\\.png" All|] SyncTrigger.Manual
+                    SyncPoint.save "..\\..\\sp.json" sp
+                    Some sp
                 | Some sp -> Some sp
         let p = NonLocality.Lib.Profiles.getProfile()
         match p with
@@ -136,6 +139,13 @@ let main _ =
 //        let json = JsonConvert.SerializeObject(sp, Formatting.Indented)
 //        do System.IO.File.WriteAllText(path, json)
     let app = App()
+    app.Root.ShutdownMode <- ShutdownMode.OnExplicitShutdown
+    app.Root.Startup.Add (fun x ->
+        let icon = new System.Windows.Forms.NotifyIcon()
+        icon.Visible <- true
+        icon.Icon <- new Drawing.Icon("..\\..\\icon.ico")
+        icon.Click.Add (fun _ -> app.Root.Shutdown())
+        ())
     let lm = SyncModel()
     let v = SyncView(new SyncWindow(),lm)
     let c = SyncController()
