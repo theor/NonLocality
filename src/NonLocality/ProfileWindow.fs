@@ -25,6 +25,7 @@ type ProfileView (w:ProfileWindow, mw) =
     override x.SetBindings m =
         w.cbProfiles.ItemsSource <- m.Profiles
         m.SelectedProfile |> Observable.add (fun _ -> w.cbProfiles.SelectedValue <- m.SelectedProfile.Value)
+
         let spView = SyncPointSettings.SyncPointSettingsView(w.ucSyncPoint :?> SyncPointSettingsControl, mw.SyncPoint.Value)
         x.ComposeViewEvents spView (fun x -> SubEvent(mw.SyncPoint.Value, x)) |> ignore
         w.btnCancel.Click |> Observable.add (fun _ -> w.Root.Close())
@@ -33,7 +34,6 @@ type ProfileView (w:ProfileWindow, mw) =
         w.cbProfiles.SelectionChanged |> Observable.map (fun _ -> SelectedProfile (string w.cbProfiles.SelectedItem))
         w.btnCreate.Click |> Observable.map (fun _ ->
             CreateProfile {name=w.tbName.Text; accessKey=w.tbAccessKey.Text; secretKey=w.tbSecretKey.Text})
-        
         w.btnSave.Click --> Save (fun () -> w.Root.Close())]
 
 type Dispatcher() = 

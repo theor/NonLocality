@@ -127,6 +127,36 @@ type SyncController() =
 type App = XAML<"App.xaml">
 
 //let run pp =
+type TrayEvents = Show | Exit
+type TrayModel = {test:bool}
+let createIcon(app:App) =
+    let addItem (icon:System.Windows.Forms.NotifyIcon) (text:string) handler = icon.ContextMenu.MenuItems.Add(text).Click.Add handler
+    let icon = new System.Windows.Forms.NotifyIcon()
+    icon.Visible <- true
+    icon.Text <- "NonLocality"
+    icon.Icon <- new Drawing.Icon("..\\..\\icon.ico")
+    icon.ContextMenu <- new Forms.ContextMenu()
+    addItem icon "Sync" (fun  _ ->
+        tracefn "sync"
+        let lm = SyncModel()
+        let v = SyncView(new SyncWindow(),lm)
+        let c = SyncController()
+        use loop = EventLoop(v, c).Start()
+        v.Root.ShowDialog() |> ignore
+        )
+    addItem icon "Exit" (fun  _ -> tracefn "exit"; app.Root.Shutdown())
+    icon
+type TrayIconView(app, m) =
+    inherit View<TrayEvents,System.Windows.Forms.NotifyIcon,TrayModel>(createIcon(app), m)
+
+    override x.SetBindings(m) = ()
+    override x.EventStreams =
+        [ x.Root.Click --> Show
+        ]
+let trayDispatcher = function
+| Show -> Sync (fun _ -> ())
+| Exit -> Sync (fun _ -> ())
+    
 
 [<EntryPoint>]
 [<STAThread>]
@@ -140,16 +170,17 @@ let main _ =
 //        do System.IO.File.WriteAllText(path, json)
     let app = App()
     app.Root.ShutdownMode <- ShutdownMode.OnExplicitShutdown
-    app.Root.Startup.Add (fun x ->
-        let icon = new System.Windows.Forms.NotifyIcon()
-        icon.Visible <- true
-        icon.Icon <- new Drawing.Icon("..\\..\\icon.ico")
-        icon.Click.Add (fun _ -> app.Root.Shutdown())
-        ())
-    let lm = SyncModel()
-    let v = SyncView(new SyncWindow(),lm)
-    let c = SyncController()
-    let loop = EventLoop(v, c)
-//        use l = loop.Start()
-    WpfApp.runApp loop v app.Root
+
+    let tm:TrayModel = {test=true}
+    let tv = TrayIconView(app, tm)
+    let td = FSharp.Qualia.Dispatcher.fromHandler trayDispatcher
+    use loop = EventLoop(tv, td).Start()
+    app.Root.Run()
+
+//    let lm = SyncModel()
+//    let v = SyncView(new SyncWindow(),lm)
+//    let c = SyncController()
+//    let loop = EventLoop(v, c)
+//
+//    WpfApp.runApp loop v app.Root
 
