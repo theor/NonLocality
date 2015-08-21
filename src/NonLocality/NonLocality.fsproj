@@ -79,11 +79,14 @@
     <Resource Include="SyncWindow.xaml" />
     <Resource Include="SyncItem.xaml" />
     <Resource Include="SyncPointSettings.xaml" />
+    <Compile Include="Types.fs" />
     <Compile Include="SyncPointSettings.fs" />
     <Resource Include="RuleItem.xaml" />
     <Resource Include="ProfileWindow.xaml" />
     <Compile Include="ProfileWindow.fs" />
+    <Compile Include="Settings.fs" />
     <Compile Include="SyncWindow.fs" />
+    <Compile Include="Main.fs" />
     <Resource Include="Icons.xaml" />
     <Resource Include="icon.ico" />
   </ItemGroup>

@@ -16,7 +16,6 @@ let modifiedDate (f:ControlledFile) =
 let takeRule (c:Count) (files:ControlledFile[]) =
     match c with
     | All -> files
-    | Zero -> Array.empty
     | Number(n) -> files |> Array.sortByDescending modifiedDate |> Array.take (min n files.Length)
         
 let matchRule (files:ControlledFile[]) (result:Set<ControlledFile>) (r:Rule) =

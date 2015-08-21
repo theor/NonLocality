@@ -44,7 +44,7 @@ type Dispatcher() =
         member x.Dispatcher =
             function
             | Cancel -> Sync ignore
-            | Save onsuccess -> Sync (fun m -> onsuccess())
+            | Save onsuccess -> Sync (fun _ -> onsuccess())
             | LoadProfiles -> Sync (fun m ->
                 let profiles = Profiles.listProfiles()
                 m.Profiles.Clear()

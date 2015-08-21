@@ -41,13 +41,7 @@ type SyncItemView(m, elt:SyncItem) =
 
 //        elt.action.Content <- sprintf "%A" action
 
-type SyncModel() =
-    member val Items = new ObservableCollection<FileSyncPreview>()
-    member val SelectedItem = new ReactiveProperty<FileSyncPreview option>(None)
-    member val Refresh = new ReactiveProperty<Unit>(())
-    
-    member val s3:IAmazonS3 = null with get,set
-    member val sp:SyncPoint option = None with get,set
+
 
 type SyncView(elt:SyncWindow, m) =
     inherit DerivedCollectionSourceView<Events, MetroWindow, SyncModel>(elt.Root, m)
@@ -70,117 +64,79 @@ type SyncView(elt:SyncWindow, m) =
         ()
 
 type SyncController() =
-    let openSettings (m:SyncPoint option) =
-        let prd = ProfileWindow.Dispatcher()
-        let prm = ProfileWindow.Model(m |> Option.map (fun x -> SyncPointSettings.SyncPointModel(x)))
-        let prw = ProfileWindow.ProfileView(ProfileWindow.ProfileWindow(), prm)
-        use ev = EventLoop(prw, prd).Start()
-        prw.Root.Owner <- Application.Current.MainWindow
-        match prw.Root.ShowDialog() |> Option.ofNullable with
-        | Some true -> prm.Credentials
-        | _ -> None
+
         
-    let init (m:SyncModel) =
-        m.sp <- match SyncPoint.load "..\\..\\sp.json" with
-                | None ->
-                    let sp = SyncPoint.create "sync-bucket-test" @"G:\tmp\nonlocality" [|Rule.fromPattern ".*\\.jpg" (Number 1)
-                                                                                         Rule.fromPattern ".*\\.png" All|] SyncTrigger.Manual
-                    SyncPoint.save "..\\..\\sp.json" sp
-                    Some sp
-                | Some sp -> Some sp
-        let p = NonLocality.Lib.Profiles.getProfile()
-        match p with
-        | None ->
-            match openSettings m.sp with
-            | Some c -> m.s3 <- Amazon.AWSClientFactory.CreateAmazonS3Client(c, Amazon.RegionEndpoint.USEast1)
-            | None -> failwith "NO CREDENTIALS"
-        | Some pp -> m.s3 <- NonLocality.Lib.Profiles.createClient pp
         
     let fetch (m:SyncModel) =
         match m.sp, m.s3 with
-        | None, _ | _, null -> init m
-        | _ -> ()
-        async {
-            do m.Items.Clear()
-            let! (_,_,files) = m.sp.Value |> SyncPoint.fetch m.s3 true
-            let syncPreview = files |> SyncPoint.syncPreview m.s3 m.sp.Value
-            do syncPreview |> Array.iter (m.Items.Add)
-        }
+        | Some sp, Some s3 ->
+            async {
+                do m.Items.Clear()
+                let! (_,_,files) = m.sp.Value |> SyncPoint.fetch s3 true
+                let syncPreview = files |> SyncPoint.syncPreview s3 sp
+                do syncPreview |> Array.iter (m.Items.Add)
+            }
+        | _ -> failwith "not init"// init m
     let openfolder (m:SyncModel) =
         m.sp |> Option.iter (fun s -> if Directory.Exists(s.path) then Process.Start s.path |> ignore)
         
     member x.doSync (m:SyncModel) =
         async {
-            do! SyncPoint.doSync m.s3 m.sp.Value (Array.ofSeq m.Items) |> Async.Ignore
+            do! SyncPoint.doSync m.s3.Value m.sp.Value (Array.ofSeq m.Items) |> Async.Ignore
             do! fetch m
         }
     interface IDispatcher<Events,SyncModel> with
         member x.InitModel _ =()
         member x.Dispatcher = 
             function
-            | OpenSettings -> Sync (fun m -> openSettings(m.sp) |> ignore)
+            | OpenSettings -> Sync (fun m -> Settings.openSettings(m.sp) |> ignore)
             | Fetch -> Async fetch
             | Remove -> Sync (fun m -> m.SelectedItem.Value |> Option.iter (m.Items.Remove >> ignore))
             | SelectionChanged item -> printfn "%A" item; Sync (fun m -> m.SelectedItem.Value <- item)
             | DoSync -> Async x.doSync
             | OpenSyncFolder -> Sync openfolder
-type App = XAML<"App.xaml">
 
-//let run pp =
-type TrayEvents = Show | Exit
-type TrayModel = {test:bool}
-let createIcon(app:App) =
-    let addItem (icon:System.Windows.Forms.NotifyIcon) (text:string) handler = icon.ContextMenu.MenuItems.Add(text).Click.Add handler
-    let icon = new System.Windows.Forms.NotifyIcon()
-    icon.Visible <- true
-    icon.Text <- "NonLocality"
-    icon.Icon <- new Drawing.Icon("..\\..\\icon.ico")
-    icon.ContextMenu <- new Forms.ContextMenu()
-    addItem icon "Sync" (fun  _ ->
-        tracefn "sync"
-        let lm = SyncModel()
-        let v = SyncView(new SyncWindow(),lm)
-        let c = SyncController()
-        use loop = EventLoop(v, c).Start()
-        v.Root.ShowDialog() |> ignore
-        )
-    addItem icon "Exit" (fun  _ -> tracefn "exit"; app.Root.Shutdown())
-    icon
-type TrayIconView(app, m) =
-    inherit View<TrayEvents,System.Windows.Forms.NotifyIcon,TrayModel>(createIcon(app), m)
 
-    override x.SetBindings(m) = ()
-    override x.EventStreams =
-        [ x.Root.Click --> Show
-        ]
-let trayDispatcher = function
-| Show -> Sync (fun _ -> ())
-| Exit -> Sync (fun _ -> ())
+module Tray =
+    type Events = Created | Show | Exit
+    type Model() =
+        member val s3:IAmazonS3 option = None with get,set
+        member val sp:SyncPoint option = None with get,set
+
+    let createIcon(app:Application) (m:Model) =
+        let addItem (icon:System.Windows.Forms.NotifyIcon) (text:string) handler = icon.ContextMenu.MenuItems.Add(text).Click.Add handler
+        let icon = new System.Windows.Forms.NotifyIcon()
+        icon.Visible <- true
+        icon.Text <- "NonLocality"
+        icon.Icon <- new Drawing.Icon("..\\..\\icon.ico")
+        icon.ContextMenu <- new Forms.ContextMenu()
+        addItem icon "Sync" (fun _ ->
+            tracefn "sync"
+            let lm = SyncModel(m.s3, m.sp)
+            let v = SyncView(new SyncWindow(),lm)
+            let c = SyncController()
+            use loop = EventLoop(v, c).Start()
+            v.Root.ShowDialog() |> ignore
+            )
+        addItem icon "Exit" (fun  _ -> tracefn "exit"; app.Shutdown())
+        icon
+
+    type View(app, m) =
+        inherit View<Events,System.Windows.Forms.NotifyIcon,Model>((createIcon app m), m)
+
+        override x.SetBindings _ = ()
+        override x.EventStreams =
+            [ Observable.Return Created
+              x.Root.Click --> Show
+            ]
+    let init (m:Model) =
+        tracefn "tray created"
+        m.sp <- Settings.initSyncPoint()
+        m.s3 <- Settings.initS3 m.sp
+    let dispatcher = function
+    | Show -> Sync (fun _ -> ())
+    | Exit -> Sync (fun _ -> ())
+    | Created -> Sync init
     
 
-[<EntryPoint>]
-[<STAThread>]
-let main _ =
-//        let buckets = SyncPoint.listBuckets s3
-//        let sp = SyncPoint.create "sync-bucket-test" "F:\\tmp\\nonlocality"  [||] SyncTrigger.Manual
-//        let sp = { sp with rules = [| Rule.fromPattern "\\*\\.jpg" (Number 1) |] }
-//        SyncPoint.save "..\\..\\sp.json" sp
-//        let sp = SyncPoint.create "sync-bucket-test" "F:\\tmp\\nonlocality"  [||] SyncTrigger.Manual
-//        let json = JsonConvert.SerializeObject(sp, Formatting.Indented)
-//        do System.IO.File.WriteAllText(path, json)
-    let app = App()
-    app.Root.ShutdownMode <- ShutdownMode.OnExplicitShutdown
-
-    let tm:TrayModel = {test=true}
-    let tv = TrayIconView(app, tm)
-    let td = FSharp.Qualia.Dispatcher.fromHandler trayDispatcher
-    use loop = EventLoop(tv, td).Start()
-    app.Root.Run()
-
-//    let lm = SyncModel()
-//    let v = SyncView(new SyncWindow(),lm)
-//    let c = SyncController()
-//    let loop = EventLoop(v, c)
-//
-//    WpfApp.runApp loop v app.Root
 
