@@ -3,7 +3,7 @@
 open System.Windows
 open FSharp.Qualia
 
-let openSettings (m:SyncPoint option) =
+let openSettings (m:SyncPointConf option) =
     let prd = ProfileWindow.Dispatcher()
     let prm = ProfileWindow.Model(m |> Option.map (fun x -> SyncPointSettings.SyncPointModel(x)))
     let prw = ProfileWindow.ProfileView(ProfileWindow.ProfileWindow(), prm)

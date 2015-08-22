@@ -11,5 +11,5 @@ type SyncModel(s3, sp) =
     member val Refresh = new ReactiveProperty<Unit>(())
     
     member val s3:IAmazonS3 option = s3 with get,set
-    member val sp:SyncPoint option = sp with get,set
+    member val sp:SyncPointConf option = sp with get,set
 

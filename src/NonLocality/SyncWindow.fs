@@ -101,7 +101,7 @@ module Tray =
     type Events = Created | Show | Exit
     type Model() =
         member val s3:IAmazonS3 option = None with get,set
-        member val sp:SyncPoint option = None with get,set
+        member val sp:SyncPointConf option = None with get,set
 
     let createIcon(app:Application) (m:Model) =
         let addItem (icon:System.Windows.Forms.NotifyIcon) (text:string) handler = icon.ContextMenu.MenuItems.Add(text).Click.Add handler
