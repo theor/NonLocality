@@ -74,14 +74,16 @@ let doSync (s3:S3.IAmazonS3) sp (files:FileSyncPreview[]) =
             let! resp = s3.GetObjectAsync(GetObjectRequest(BucketName=sp.bucketName, Key=f.file.key)) |> Async.AwaitTask
             do! resp.WriteResponseStreamToFileAsync((localPath sp f.file), false, CancellationToken.None) |> Async.AwaitTask
         }
+
                             
     let put f =
-        s3.PutObjectAsync(PutObjectRequest(BucketName=sp.bucketName, Key=f.file.key,FilePath=localPath sp f.file)) |> Async.AwaitTask
+        s3.PutObjectAsync(PutObjectRequest(BucketName=sp.bucketName, Key=f.file.key,FilePath=localPath sp f.file)) |> Async.AwaitTask |> Async.Ignore
         
     let toGet, toSet = files
                         |> Array.filter (fun f -> f.action <> NoAction)
                         |> Array.partition (fun f -> f.action = GetRemote)
     async {
         let gets = toGet |> Array.map (get >> Async.RunSynchronously)
-        return gets
+        let sets = toSet |> Array.map (put >> Async.RunSynchronously)
+        return Array.concat [gets; sets]
     }
