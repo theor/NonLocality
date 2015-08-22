@@ -53,6 +53,11 @@ type FileSyncPreview = { file : ControlledFile
                          action : FileSyncAction }
 type SyncPoint =
     { bucketName : string
+      profile: string }
+type SyncPointConf =
+    { syncpoint: SyncPoint
       path : string
       rules : Rule[]
       trigger : SyncTrigger }
+type Config = 
+    { paths: string[] }

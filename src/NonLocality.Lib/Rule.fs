@@ -26,6 +26,6 @@ let matchRule (files:ControlledFile[]) (result:Set<ControlledFile>) (r:Rule) =
                 |> Set.ofArray
                 |> Set.union result
 //    | _ -> failwith "not implemented"
-let matchRules (sp:SyncPoint) files =
+let matchRules (sp:SyncPointConf) files =
     sp.rules |> Array.fold (matchRule files) Set.empty |> Array.ofSeq
 //        files |> Array.filter (fun f -> Array.exists (matchRule f) sp.rules)
