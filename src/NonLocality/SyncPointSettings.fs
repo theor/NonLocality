@@ -7,7 +7,6 @@ open FSharp.Qualia
 open FSharp.Qualia.WPF
 open MahApps.Metro.Controls
 open NonLocality.Lib
-open Amazon.Runtime
 open System.Windows
 open System.Text.RegularExpressions
 
@@ -35,7 +34,7 @@ and SyncPointModel(sp:SyncPointConf) =
     member val rules = ObservableCollection(sp.rules |> Array.map (fun x -> RuleModel(x) ))
     member val trigger = ReactiveProperty(sp.trigger)
     member val path = ReactiveProperty(sp.path)
-    member val bucketName = ReactiveProperty(sp.bucketName)
+    member val bucketName = ReactiveProperty(sp.syncpoint.bucketName)
 
 type RuleItemControl = XAML<"RuleItem.xaml", true>
 type RuleItemView(m, elt:RuleItemControl) =

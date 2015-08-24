@@ -5,19 +5,16 @@ open FsXaml
 open FSharp.Qualia
 open MahApps.Metro.Controls
 open NonLocality.Lib
-open Amazon.Runtime
 open SyncPointSettings
 open System.Windows
+open Amazon.Runtime
 
 
-type Model(sp) =
-//    member val ProfileName = ReactiveProperty("")
-//    member val AccessKey = ReactiveProperty("")
-//    member val SecretKey = ReactiveProperty("")
+type Model()=
     member val Profiles:ObservableCollection<string> = ObservableCollection()
     member val SelectedProfile = ReactiveProperty("") with get,set
     member val Credentials : AWSCredentials option = None with get,set
-    member val SyncPoint: SyncPointModel option = sp
+    //member val SyncPoint: SyncPointModel option = sp
 
 type ProfileWindow = XAML<"ProfileWindow.xaml", true>
 type ProfileView (w:ProfileWindow, mw) =
@@ -25,9 +22,8 @@ type ProfileView (w:ProfileWindow, mw) =
     override x.SetBindings m =
         w.cbProfiles.ItemsSource <- m.Profiles
         m.SelectedProfile |> Observable.add (fun _ -> w.cbProfiles.SelectedValue <- m.SelectedProfile.Value)
-
-        let spView = SyncPointSettings.SyncPointSettingsView(w.ucSyncPoint :?> SyncPointSettingsControl, mw.SyncPoint.Value)
-        x.ComposeViewEvents spView (fun x -> SubEvent(mw.SyncPoint.Value, x)) |> ignore
+//        let spView = SyncPointSettings.SyncPointSettingsView(w.ucSyncPoint :?> SyncPointSettingsControl, mw.SyncPoint.Value)
+//        x.ComposeViewEvents spView (fun x -> SubEvent(mw.SyncPoint.Value, x)) |> ignore
         w.btnCancel.Click |> Observable.add (fun _ -> w.Root.Close())
     override x.EventStreams = [
         w.Root.Loaded --> LoadProfiles

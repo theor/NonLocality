@@ -3,7 +3,6 @@
 open System
 open System.Windows
 open FsXaml
-open NonLocality
 open FSharp.Qualia
 
 type App = XAML<"App.xaml">
@@ -20,8 +19,9 @@ let main _ =
 //        do System.IO.File.WriteAllText(path, json)
     let app = App()
     app.Root.ShutdownMode <- ShutdownMode.OnExplicitShutdown
-
-    let tm:Tray.Model = Tray.Model()
+    let config = Config.load()
+//    config |> Config.save
+    let tm:Tray.Model = Tray.Model(config)
     let tv = Tray.View(app.Root, tm)
     let td = FSharp.Qualia.Dispatcher.fromHandler Tray.dispatcher
     use loop = EventLoop(tv, td).Start()

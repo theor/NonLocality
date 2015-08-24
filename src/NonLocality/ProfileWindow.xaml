@@ -48,9 +48,9 @@
                         <Button x:Name="btnCreate" Grid.Row="7" Grid.Column="2">Create Profile</Button>
                     </Grid>
                 </TabItem>
-                <TabItem Header="Sync Point" IsSelected="true">
+                <!--<TabItem Header="Sync Point" IsSelected="true">
                     <local:SyncPointSettingsControl x:Name="ucSyncPoint"/>
-                </TabItem>
+                </TabItem>-->
             </TabControl>
         </ScrollViewer>
     </DockPanel>

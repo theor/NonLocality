@@ -86,6 +86,7 @@
     <Compile Include="ProfileWindow.fs" />
     <Compile Include="Settings.fs" />
     <Compile Include="SyncWindow.fs" />
+    <Compile Include="Tray.fs" />
     <Compile Include="Main.fs" />
     <Resource Include="Icons.xaml" />
     <Resource Include="icon.ico" />

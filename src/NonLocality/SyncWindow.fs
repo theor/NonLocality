@@ -8,7 +8,7 @@ open System
 open System.IO
 open System.Diagnostics
 
-open Amazon.S3
+//open Amazon.S3
 open FsXaml
 open FSharp.Qualia
 open FSharp.Qualia.WPF
@@ -79,7 +79,6 @@ type SyncController() =
         | _ -> failwith "not init"// init m
     let openfolder (m:SyncModel) =
         m.sp |> Option.iter (fun s -> if Directory.Exists(s.path) then Process.Start s.path |> ignore)
-        
     member x.doSync (m:SyncModel) =
         async {
             do! SyncPoint.doSync m.s3.Value m.sp.Value (Array.ofSeq m.Items) |> Async.Ignore
@@ -89,54 +88,9 @@ type SyncController() =
         member x.InitModel _ =()
         member x.Dispatcher = 
             function
-            | OpenSettings -> Sync (fun m -> Settings.openSettings(m.sp) |> ignore)
+            | OpenSettings -> Sync (fun _ -> Settings.openProfileSettings() |> ignore)
             | Fetch -> Async fetch
             | Remove -> Sync (fun m -> m.SelectedItem.Value |> Option.iter (m.Items.Remove >> ignore))
             | SelectionChanged item -> printfn "%A" item; Sync (fun m -> m.SelectedItem.Value <- item)
             | DoSync -> Async x.doSync
             | OpenSyncFolder -> Sync openfolder
-
-
-module Tray =
-    type Events = Created | Show | Exit
-    type Model() =
-        member val s3:IAmazonS3 option = None with get,set
-        member val sp:SyncPointConf option = None with get,set
-
-    let createIcon(app:Application) (m:Model) =
-        let addItem (icon:System.Windows.Forms.NotifyIcon) (text:string) handler = icon.ContextMenu.MenuItems.Add(text).Click.Add handler
-        let icon = new System.Windows.Forms.NotifyIcon()
-        icon.Visible <- true
-        icon.Text <- "NonLocality"
-        icon.Icon <- new Drawing.Icon("..\\..\\icon.ico")
-        icon.ContextMenu <- new Forms.ContextMenu()
-        addItem icon "Sync" (fun _ ->
-            tracefn "sync"
-            let lm = SyncModel(m.s3, m.sp)
-            let v = SyncView(new SyncWindow(),lm)
-            let c = SyncController()
-            use loop = EventLoop(v, c).Start()
-            v.Root.ShowDialog() |> ignore
-            )
-        addItem icon "Exit" (fun  _ -> tracefn "exit"; app.Shutdown())
-        icon
-
-    type View(app, m) =
-        inherit View<Events,System.Windows.Forms.NotifyIcon,Model>((createIcon app m), m)
-
-        override x.SetBindings _ = ()
-        override x.EventStreams =
-            [ Observable.Return Created
-              x.Root.Click --> Show
-            ]
-    let init (m:Model) =
-        tracefn "tray created"
-        m.sp <- Settings.initSyncPoint()
-        m.s3 <- Settings.initS3 m.sp
-    let dispatcher = function
-    | Show -> Sync (fun _ -> ())
-    | Exit -> Sync (fun _ -> ())
-    | Created -> Sync init
-    
-
-

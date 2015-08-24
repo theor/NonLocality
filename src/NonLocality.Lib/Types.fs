@@ -3,6 +3,8 @@ module Types
 
 open System
 open System.Text.RegularExpressions
+open Newtonsoft.Json
+open Utils
 
 type Status = Identical | Local | Remote    
 
@@ -51,13 +53,37 @@ type SyncTrigger = Manual | Periodic of TimeSpan
 type FileSyncAction = NoAction | GetRemote | SendLocal | ResolveConflict
 type FileSyncPreview = { file : ControlledFile
                          action : FileSyncAction }
-type SyncPoint =
+type SyncPointDef =
     { bucketName : string
-      profile: string }
+      pathOverride: string option }
+
+      
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module SyncPointDef =
+    let load path = Utils.load<SyncPointDef> path
+    let save path c = Utils.save<SyncPointDef> path c
+
 type SyncPointConf =
-    { syncpoint: SyncPoint
+    { syncpoint: SyncPointDef
       path : string
       rules : Rule[]
       trigger : SyncTrigger }
+
+
 type Config = 
-    { paths: string[] }
+    { profile: string
+      syncpoints: SyncPointDef[] }
+    
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module Config =
+    let loadFrom path = Utils.load<Config> path
+    let getPath() =
+        let appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
+        let folder = System.IO.Path.Combine(appdata, "NonLocality")
+        if not <| IO.Directory.Exists folder then IO.Directory.CreateDirectory folder |> ignore
+        System.IO.Path.Combine(folder, "config.json")
+    let save c = Utils.save<Config> (getPath()) c
+    let load() = 
+        match loadFrom <| getPath() with
+        | Some c -> c
+        | None -> {profile="default"; syncpoints=[|{bucketName="asd";pathOverride=None}|]}

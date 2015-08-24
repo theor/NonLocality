@@ -1,33 +1,37 @@
 ﻿[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module SyncPoint
 
-open Newtonsoft.Json
-open Newtonsoft.Json.Converters
 open System.Threading
 open System
 open System.IO
 open Amazon
 open Amazon.S3.Model
+open FSharp.Qualia
 
 type FetchResult = SyncPointConf * DateTime * ControlledFile[]
 
-let private settings = new JsonSerializerSettings(Converters=ResizeArray([RegexConverter() :> JsonConverter]),
-                                                    Formatting = Formatting.Indented)
-let save path sp = 
-    let json = JsonConvert.SerializeObject(sp, settings)
-    do System.IO.File.WriteAllText(path, json)
-let load path =
-    if not <| File.Exists path
-    then None
-    else
-        let json = File.ReadAllText(path)
-        Some <| JsonConvert.DeserializeObject<SyncPointConf>(json, settings)
-
-let create conf path rules trigger : SyncPointConf =
+let create conf path trigger rules : SyncPointConf =
     { syncpoint = conf
       path = path
       rules = rules
       trigger = trigger }
+
+let load = Utils.load<SyncPointConf>
+let save = Utils.save<SyncPointConf>
+
+let fromDef (s3:S3.IAmazonS3) (def:SyncPointDef) =
+    try
+        let req = GetObjectRequest(BucketName=def.bucketName, Key="syncpoint.json")
+        let resp = s3.GetObject(req)
+        let tmp = Path.GetTempFileName()
+        resp.WriteResponseStreamToFile tmp
+        match load tmp with
+        | None -> None
+        | Some sp -> Some <| { sp with syncpoint = def }
+    with
+        | e -> tracefn "%A" e; None
+let fromConfig (s3:S3.IAmazonS3) (c:Config) =
+    c.syncpoints |> Array.choose (fromDef s3)
 
 let localPath sp f = Path.Combine(sp.path, f.key)
 
