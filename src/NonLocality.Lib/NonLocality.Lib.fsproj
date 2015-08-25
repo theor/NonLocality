@@ -34,41 +34,6 @@
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\NonLocality.Lib.XML</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Script.fsx" />
-    <None Include="paket.references" />
-    <None Include="paket.template" />
-    <None Include="Scripts\load-references.fsx" />
-    <None Include="Scripts\load-project.fsx" />
-    <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Utils.fs" />
-    <Compile Include="Profiles.fs" />
-    <Compile Include="Types.fs" />
-    <Compile Include="Rule.fs" />
-    <Compile Include="SyncPoint.fs" />
-    <Compile Include="Library1.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\FSharp.Qualia\src\FSharp.Qualia.WPF\FSharp.Qualia.WPF.fsproj">
-      <Name>FSharp.Qualia.WPF</Name>
-      <Project>{f76cbddf-b8de-4bc2-84c4-55c56e356cd9}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\FSharp.Qualia\src\FSharp.Qualia\FSharp.Qualia.fsproj">
-      <Name>FSharp.Qualia</Name>
-      <Project>{0ea768ec-d373-4536-bdf8-8c8fe8073670}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -1025,4 +990,41 @@
       </ItemGroup>
     </When>
   </Choose>
+  <ItemGroup>
+    <Compile Include="..\..\paket-files\fsprojects\Chessie\src\Chessie\ErrorHandling.fs">
+      <Paket>True</Paket>
+      <Link>ErrorHandling.fs</Link>
+    </Compile>
+    <None Include="Script.fsx" />
+    <None Include="paket.references" />
+    <None Include="paket.template" />
+    <None Include="Scripts\load-references.fsx" />
+    <None Include="Scripts\load-project.fsx" />
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Utils.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Profiles.fs" />
+    <Compile Include="Rule.fs" />
+    <Compile Include="SyncPoint.fs" />
+    <Compile Include="Library1.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <ProjectReference Include="..\..\..\FSharp.Qualia\src\FSharp.Qualia.WPF\FSharp.Qualia.WPF.fsproj">
+      <Name>FSharp.Qualia.WPF</Name>
+      <Project>{f76cbddf-b8de-4bc2-84c4-55c56e356cd9}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\FSharp.Qualia\src\FSharp.Qualia\FSharp.Qualia.fsproj">
+      <Name>FSharp.Qualia</Name>
+      <Project>{0ea768ec-d373-4536-bdf8-8c8fe8073670}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

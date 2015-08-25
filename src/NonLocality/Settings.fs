@@ -2,6 +2,7 @@
 
 open System.Windows
 open FSharp.Qualia
+open Chessie.ErrorHandling
 
 let openProfileSettings () =
     let prd = ProfileWindow.Dispatcher()
@@ -12,6 +13,7 @@ let openProfileSettings () =
     match prw.Root.ShowDialog() |> Option.ofNullable with
     | Some true -> prm.Credentials
     | _ -> None
+
         
 let initSyncPoint(c:Config) = None
 //let initSyncPoint() =
@@ -24,14 +26,16 @@ let initSyncPoint(c:Config) = None
 //        SyncPoint.save "..\\..\\sp.json" sp
 //        Some sp
 //    | Some sp -> Some sp
-let initS3() =
-    let p = NonLocality.Lib.Profiles.getProfile()
+
+let initS3(c) =
+    let p = NonLocality.Lib.Profiles.getProfile(c)
+    
     match p with
-    | None ->
-        match openProfileSettings() with
-        | Some c -> Some <| Amazon.AWSClientFactory.CreateAmazonS3Client(c, Amazon.RegionEndpoint.USEast1)
-        | None -> None
-    | Some pp -> Some <| NonLocality.Lib.Profiles.createClient pp
+//        match openProfileSettings() with
+//        | Some c -> Some <| Amazon.AWSClientFactory.CreateAmazonS3Client(c, Amazon.RegionEndpoint.USEast1)
+//        | None -> None
+    | Pass(_:Amazon.Runtime.AWSCredentials) -> None // Some <| NonLocality.Lib.Profiles.createClient pp
+    | Fail x -> None
 let init (_:SyncModel) =
     
    // m.sp <- initSyncPoint()

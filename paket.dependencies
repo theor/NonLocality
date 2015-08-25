@@ -13,3 +13,4 @@ nuget MahApps.Metro
 nuget FSharp.Qualia
 nuget FSharp.Qualia.WPF
 github fsharp/FAKE modules/Octokit/Octokit.fsx
+github fsprojects/Chessie src/Chessie/ErrorHandling.fs

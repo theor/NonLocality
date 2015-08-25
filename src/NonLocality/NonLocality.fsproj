@@ -60,15 +60,10 @@
   -->
   <Import Project="..\..\.paket\paket.targets" />
   <ItemGroup>
-    <Content Include="Resources\Entypo-license.txt">
+    <Compile Include="..\..\paket-files\fsprojects\Chessie\src\Chessie\ErrorHandling.fs">
       <Paket>True</Paket>
-    </Content>
-    <Content Include="Resources\Entypo.ttf">
-      <Paket>True</Paket>
-    </Content>
-    <Content Include="Resources\WindowsIcons-license.txt">
-      <Paket>True</Paket>
-    </Content>
+      <Link>ErrorHandling.fs</Link>
+    </Compile>
     <None Include="paket.references" />
     <None Include="paket.template" />
     <Content Include="App.config">
