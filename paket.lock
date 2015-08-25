@@ -4,7 +4,7 @@ NUGET
     AWSSDK (2.3.50.1)
       Microsoft.Net.Http (>= 2.1.10) - framework: wpv8.0
     Expression.Blend.Sdk (1.0.2) - framework: >= net45
-    FAKE (4.1.4)
+    FAKE (4.2.0)
     FSharp.Compiler.Service (1.4.0.1)
     FSharp.Core (4.0.0.1)
     FSharp.Formatting (2.10.0)
@@ -25,7 +25,7 @@ NUGET
       Expression.Blend.Sdk (>= 1.0.2) - framework: >= net45
     gong-wpf-dragdrop (0.1.4.3)
       WPFToolkit (>= 3.5.50211.1) - framework: >= net35 < net40
-    MahApps.Metro (1.1.2.0)
+    MahApps.Metro (1.1.2)
     Microsoft.Bcl (1.1.10)
       Microsoft.Bcl.Build (>= 1.0.14)
     Microsoft.Bcl.Build (1.0.21)

@@ -7,6 +7,7 @@ open System.Windows.Controls
 open System
 open System.IO
 open System.Diagnostics
+open Chessie.ErrorHandling
 
 //open Amazon.S3
 open FsXaml
@@ -75,22 +76,24 @@ type SyncController() =
                 let! (_,_,files) = m.sp.Value |> SyncPoint.fetch s3 true
                 let syncPreview = files |> SyncPoint.syncPreview s3 sp
                 do syncPreview |> Array.iter (m.Items.Add)
+                return ok ()
             }
-        | _ -> failwith "not init"// init m
+        | _ -> fail "not init" |> async.Return// init m
     let openfolder (m:SyncModel) =
-        m.sp |> Option.iter (fun s -> if Directory.Exists(s.path) then Process.Start s.path |> ignore)
-    member x.doSync (m:SyncModel) =
+        m.sp |> Option.iter (fun s -> if Directory.Exists(s.path) then Process.Start s.path |> ignore) |> ok
+    member x.doSync (m:SyncModel) : AsyncResult<unit,string> =
         async {
             do! SyncPoint.doSync m.s3.Value m.sp.Value (Array.ofSeq m.Items) |> Async.Ignore
-            do! fetch m
-        }
+            let! x = fetch m
+            return x
+        } |> AsyncResult.AR
     interface IDispatcher<Events,SyncModel> with
         member x.InitModel _ =()
         member x.Dispatcher = 
             function
-            | OpenSettings -> Sync (fun _ -> Settings.openProfileSettings() |> ignore)
-            | Fetch -> Async fetch
-            | Remove -> Sync (fun m -> m.SelectedItem.Value |> Option.iter (m.Items.Remove >> ignore))
-            | SelectionChanged item -> printfn "%A" item; Sync (fun m -> m.SelectedItem.Value <- item)
+            | OpenSettings -> Sync (fun _ -> Settings.openProfileSettings() |> ignore |> ok)
+            | Fetch -> Async (fetch >> AsyncResult.AR)
+            | Remove -> Sync (fun m -> m.SelectedItem.Value |> Option.iter (m.Items.Remove >> ignore) |> ok)
+            | SelectionChanged item -> printfn "%A" item; Sync (fun m -> m.SelectedItem.Value <- item; ok())
             | DoSync -> Async x.doSync
             | OpenSyncFolder -> Sync openfolder

@@ -8,6 +8,7 @@ open NonLocality.Lib
 open SyncPointSettings
 open System.Windows
 open Amazon.Runtime
+open Chessie.ErrorHandling
 
 
 type Model()=
@@ -36,19 +37,21 @@ type Dispatcher() =
     let create n a s (m:Model) =
         let cred = Profiles.registerProfile n a s
         m.Credentials <- cred
+        ok ()
     interface IDispatcher<Events,Model> with
         member x.Dispatcher =
             function
-            | Cancel -> Sync ignore
-            | Save onsuccess -> Sync (fun _ -> onsuccess())
+            | Cancel -> Sync (ignore >> ok)
+            | Save onsuccess -> Sync (fun _ -> onsuccess() |> ok)
             | LoadProfiles -> Sync (fun m ->
                 let profiles = Profiles.listProfiles()
                 m.Profiles.Clear()
                 profiles |> Seq.iter m.Profiles.Add
                 if not <| Seq.isEmpty profiles then
-                    m.SelectedProfile.Value <- profiles |> Seq.head)
+                    m.SelectedProfile.Value <- profiles |> Seq.head
+                ok ())
             | CreateProfile { name=n; accessKey=a; secretKey=s } -> Sync (create n a s)
-            | SelectedProfile _ -> Sync (fun _ -> ())
+            | SelectedProfile _ -> Sync (fun _ -> ok ())
             | SubEvent (mm,x) -> match SyncPointSettings.Dispatcher.dispatcher x with
                                  | Sync f -> Sync (fun _ -> f mm)
                                  | Async f -> Async (fun _ -> f mm)

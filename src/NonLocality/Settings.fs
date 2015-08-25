@@ -28,14 +28,13 @@ let initSyncPoint(c:Config) = None
 //    | Some sp -> Some sp
 
 let initS3(c) =
-    let p = NonLocality.Lib.Profiles.getProfile(c)
-    
+    let p = NonLocality.Lib.Profiles.getProfile(c) |> failOnWarnings
     match p with
 //        match openProfileSettings() with
 //        | Some c -> Some <| Amazon.AWSClientFactory.CreateAmazonS3Client(c, Amazon.RegionEndpoint.USEast1)
 //        | None -> None
-    | Pass(_:Amazon.Runtime.AWSCredentials) -> None // Some <| NonLocality.Lib.Profiles.createClient pp
-    | Fail x -> None
+    | Pass(pp:Amazon.Runtime.AWSCredentials) -> ok <| NonLocality.Lib.Profiles.createClient pp
+    | Fail x -> fail x
 let init (_:SyncModel) =
     
    // m.sp <- initSyncPoint()

@@ -6,6 +6,7 @@ open System.Windows
 open Amazon.S3
 open FSharp.Qualia
 open NonLocality
+open Chessie.ErrorHandling
 
 type Events = Created | Show | Exit
 type Model(c:Config) =
@@ -43,13 +44,14 @@ type View(app, m) =
 let init (m:Model) =
     tracefn "tray created"
     
-    m.s3 <- Settings.initS3()
+//    m.s3 <- Settings.initS3(m.config)
     match m.s3 with
     | Some s3 -> m.syncpoints <- SyncPoint.fromConfig s3 m.config
     | _ -> ()
+    ok ()
    // m.sp <- Settings.initSyncPoint()
     //m.s3 <- Settings.initS3 m.sp
 let dispatcher = function
-| Show -> Sync (fun _ -> ())
-| Exit -> Sync (fun _ -> ())
+| Show -> Sync (fun _ -> ok ())
+| Exit -> Sync (fun _ -> ok ())
 | Created -> Sync init

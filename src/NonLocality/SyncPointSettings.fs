@@ -9,7 +9,7 @@ open MahApps.Metro.Controls
 open NonLocality.Lib
 open System.Windows
 open System.Text.RegularExpressions
-
+open Chessie.ErrorHandling
 type Profile = { name: string
                  accessKey: string
                  secretKey: string}
@@ -84,8 +84,10 @@ type SyncPointSettingsView(elt:SyncPointSettingsControl, m:SyncPointModel) =
 module Dispatcher =
     let private removeRule rm (m:SyncPointModel) =
         m.rules.Remove rm |> ignore
+        ok ()
     let private addRule (m:SyncPointModel) =
         m.rules.Add(RuleModel(Rule.fromPattern ".*" Count.All))
+        ok ()
     let dispatcher x = 
         match x with
         | AddRule -> Sync(addRule)
